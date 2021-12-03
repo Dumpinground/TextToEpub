@@ -18,7 +18,7 @@ using json = nlohmann::json;
 
 void saveJson(const json &j, const string &name) {
     ofstream o(OutPutRoot + name);
-    o << setw(4) << j << endl;
+    o << setw(2) << j << endl;
 }
 
 void getJson(json &j, const string &name) {
@@ -46,18 +46,19 @@ TEST(test, testJson) {
     saveJson(j2, "j2");
 }
 
-TEST(test, testNewJson) {
-    saveJson(newJson(), "newBook.json");
-}
-
 TEST(test, testGetJson) {
     json j;
     getJson(j, "j2.json");
+    cout << j["happy"] << j["name"] << endl;
+    getJson(j, "missing 2.json");
+    cout << j["title"] << endl;
+}
+
+TEST(test, testNewBook) {
+    Book::Create(OutPutRoot);
 }
 
 TEST(test, testBook) {
-    json j;
-    getJson(j, "Missing 1.json");
-    Book book(j);
+    Book book(OriginRoot + "missing 2.json");
     cout << book << endl;
 }

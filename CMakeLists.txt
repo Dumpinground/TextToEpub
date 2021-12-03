@@ -44,7 +44,6 @@ endif ()
 
 add_executable(TextToEpub
         ${MAIN_SRC}
-        transformer.cpp
         ${UTIL_SRC}
         )
 

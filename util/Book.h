@@ -19,11 +19,12 @@ json newJson();
 
 class Book {
 public:
-    string title;
-    string author;
-    string cover;
+    static void Create(const string &dir);
 
-    explicit Book(json book);
+    json content;
+
+    explicit Book(json jsonFile);
+    explicit Book(const string& jsonFilePath);
 
     friend std::ostream &operator<<(std::ostream &out, Book &book);
 };

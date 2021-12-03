@@ -4,26 +4,27 @@
 
 #include "Book.h"
 
-json newJson() {
-    return {
-            {"title", ""},
-            {"author", ""},
-            {"cover", ""}
-    };
+#include <utility>
+#include <fstream>
+
+using namespace std;
+
+void Book::Create(const string &dir) {
+    ifstream i("../template/template.json");
+    ofstream o(dir + "/newBook.json");
+    o << i.rdbuf();
 }
 
-Book::Book(json book) {
-    title = book["title"];
-    author = book["author"];
-    cover = book["cover"];
+Book::Book(json jsonFile) {
+    content = std::move(jsonFile);
+}
+
+Book::Book(const string& jsonFilePath) {
+    ifstream i(jsonFilePath);
+    i >> content;
 }
 
 std::ostream &operator<<(std::ostream &out, Book &book) {
-
-    out << "{" << std::endl;
-    out << "    " << VNAME(book.title) << ": " << book.title << std::endl;
-    out << "    " << VNAME(book.author) << ": " << book.author << std::endl;
-    out << "    " << VNAME(book.cover) << ": " << book.cover << std::endl;
-    out << "}" << std::endl;
+    out << setw(4) << book.content << endl;
     return out;
 }
