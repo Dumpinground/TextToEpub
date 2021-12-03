@@ -22,6 +22,8 @@ FetchContent_Declare(
 )
 
 FetchContent_GetProperties(json)
+
+#update json
 if(NOT json_POPULATED)
     FetchContent_Populate(json)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
@@ -31,11 +33,20 @@ enable_testing()
 
 file(GLOB UTIL_SRC "util/*.h" "util/*.cpp")
 
+#test toggle
+set(TEST ON)
+
+if (TEST)
+    set(MAIN_SRC test/test.cpp)
+    else()
+    set(MAIN_SRC main.cpp)
+endif ()
+
 add_executable(TextToEpub
-        main.cpp
+        ${MAIN_SRC}
         transformer.cpp
         ${UTIL_SRC}
-        test/test.cpp)
+        )
 
 include(GoogleTest json)
 target_link_libraries(TextToEpub

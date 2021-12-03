@@ -5,7 +5,6 @@
 #include "../util/Book.h"
 
 #include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -15,10 +14,16 @@ using namespace std;
 using json = nlohmann::json;
 
 #define OutPutRoot string("../test/result/")
+#define OriginRoot string("../test/origin/")
 
 void saveJson(const json &j, const string &name) {
-    ofstream o(OutPutRoot + name + ".json");
+    ofstream o(OutPutRoot + name);
     o << setw(4) << j << endl;
+}
+
+void getJson(json &j, const string &name) {
+    ifstream i(OriginRoot + name);
+    i  >> j;
 }
 
 TEST(test, testJson) {
@@ -42,9 +47,17 @@ TEST(test, testJson) {
 }
 
 TEST(test, testNewJson) {
-    saveJson(newJson(), "newBook");
+    saveJson(newJson(), "newBook.json");
+}
+
+TEST(test, testGetJson) {
+    json j;
+    getJson(j, "j2.json");
 }
 
 TEST(test, testBook) {
-
+    json j;
+    getJson(j, "Missing 1.json");
+    Book book(j);
+    cout << book << endl;
 }

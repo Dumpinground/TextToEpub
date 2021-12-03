@@ -12,6 +12,9 @@
 using string = std::string;
 using json = nlohmann::json;
 
+#define VNAME(x) #x
+#define VDUMP(x) std::cout << VLIST(x) << std::endl
+
 json newJson();
 
 class Book {
@@ -20,7 +23,9 @@ public:
     string author;
     string cover;
 
-    Book(json book);
+    explicit Book(json book);
+
+    friend std::ostream &operator<<(std::ostream &out, Book &book);
 };
 
 #endif //TEXTTRANSFORM_BOOK_H
