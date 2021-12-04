@@ -58,7 +58,38 @@ TEST(test, testNewBook) {
     Book::Create(OutPutRoot);
 }
 
+TEST(test, testStructToJson) {
+    using namespace outline;
+
+    Illustration illustration;
+    Context context;
+    Content content;
+    Contributor contributor;
+    Metadata metadata;
+    json j = illustration;
+    saveJson(j, "illus.json");
+    j = context;
+    saveJson(j, "context.json");
+    j = contributor;
+    saveJson(j, "contributor.json");
+    j = metadata;
+    saveJson(j, "metadata.json");
+
+    Book book;
+    j = book;
+    saveJson(j, "book.json");
+}
+
+TEST(test, testJsonToStrut) {
+
+}
+
 TEST(test, testBook) {
     Book book(OriginRoot + "missing 2.json");
     cout << book << endl;
+}
+
+TEST(test, testCreateBuild) {
+    Book book(OriginRoot + "missing 2.json");
+    book.CreateBuild(OutPutRoot);
 }

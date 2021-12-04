@@ -5,22 +5,15 @@
     "author": "",
     "cover": "",
     "illustrator": "",
-    "translator": "",
-    "proofreader": "",
+    "extraContributor": [],
     "context": {
         "preface": "",
-        "illustration": {
-            "color": {
-                "0": ""
-            },
-            "gray": {
-                "0": ""
-            }
-        },
         "preface2": "",
-        "chapter": {
-            "0": ""
-        },
+        "chapter": [],
         "afterword": ""
+    },
+    "illustration": {
+        "color": [],
+        "gray": []
     }
 }
