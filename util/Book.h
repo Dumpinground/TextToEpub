@@ -23,56 +23,37 @@ namespace outline {
         string preface, preface2;
         std::vector<string> chapter;
         string afterword;
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Context, preface, preface2, chapter, afterword)
     };
-
-    void to_json(json &j, const Context &c);
-
-    void from_json(const json &j, Context &c);
 
     struct Illustration {
         std::vector<string> color, gray;
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Illustration, color, gray)
     };
-
-    void to_json(json &j, const Illustration &i);
-
-    void from_json(const json &j, Illustration &i);
-
-    struct Content {
-        string title, subtitle, volume, author,
-                cover, illustrator;
-        std::vector<string> extraContributor;
-        Context context;
-        Illustration illustration;
-    };
-
-    void to_json(json &j, const Content &c);
-
-    void from_json(const json &j, Content &c);
 
     struct Contributor {
         string author, illustrator;
         std::vector<string> others;
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Contributor, author, illustrator, others)
     };
-
-    void to_json(json &j, const Contributor &c);
-
-    void from_json(const json &j, Contributor &c);
 
     struct Metadata {
         string title, subtitle, volume, cover, backCover;
         std::vector<string> extra;
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Metadata, title, subtitle, volume, cover, backCover, extra)
     };
 
-    void to_json(json &j, const Metadata &m);
+//    TODO translator
 
-    void from_json(const json &j, Metadata &m);
 }
 
 class Book {
 public:
     static void Create(const string &dir);
-
-    json contentJson;
 
     outline::Metadata metadata;
     outline::Contributor contributor;
@@ -80,14 +61,12 @@ public:
     outline::Illustration illustration;
 
     Book();
-    explicit Book(json jsonFile);
-    explicit Book(const string& jsonFilePath);
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, context, illustration)
 
     void CreateBuild(const string &path);
 
     friend std::ostream &operator<<(std::ostream &out, Book &book);
 };
-
-void to_json(json &j, const Book &b);
 
 #endif //TEXTTRANSFORM_BOOK_H

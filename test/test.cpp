@@ -16,13 +16,13 @@ using json = nlohmann::json;
 #define OutPutRoot string("../test/result/")
 #define OriginRoot string("../test/origin/")
 
-void saveJson(const json &j, const string &name) {
-    ofstream o(OutPutRoot + name);
+void saveJson(const json &j, const string &name, const string& root = OutPutRoot) {
+    ofstream o(root + name);
     o << setw(2) << j << endl;
 }
 
-void getJson(json &j, const string &name) {
-    ifstream i(OriginRoot + name);
+void getJson(json &j, const string &name, const string& root = OriginRoot) {
+    ifstream i(root + name);
     i  >> j;
 }
 
@@ -58,38 +58,67 @@ TEST(test, testNewBook) {
     Book::Create(OutPutRoot);
 }
 
-TEST(test, testStructToJson) {
-    using namespace outline;
+TEST(StructToJson, testIllustration) {
+    outline::Illustration illustration;
+    saveJson(illustration, "illustration.json");
+}
 
-    Illustration illustration;
-    Context context;
-    Content content;
-    Contributor contributor;
-    Metadata metadata;
-    json j = illustration;
-    saveJson(j, "illus.json");
-    j = context;
-    saveJson(j, "context.json");
-    j = contributor;
-    saveJson(j, "contributor.json");
-    j = metadata;
-    saveJson(j, "metadata.json");
+TEST(StructToJson, testContext) {
+    outline::Context context;
+    saveJson(context, "context.json");
+}
 
+TEST(StructToJson, testContributor) {
+    outline::Contributor contributor;
+    saveJson(contributor, "contributor.json");
+}
+
+TEST(StructToJson, testMetadata) {
+    outline::Metadata metadata;
+    saveJson(metadata, "metadata.json");
+}
+
+TEST(StructToJson, testBook) {
     Book book;
-    j = book;
-    saveJson(j, "book.json");
+    saveJson(book, "book.json");
 }
 
-TEST(test, testJsonToStrut) {
-
+TEST(JsonToStrut, testIllustration) {
+    outline::Illustration illustration;
+    json j;
+    getJson(j, "illustration.json", OutPutRoot);
+    illustration = j.get<outline::Illustration>();
 }
 
-TEST(test, testBook) {
-    Book book(OriginRoot + "missing 2.json");
+TEST(JsonToStrut, testContext) {
+    outline::Context context;
+    json j;
+    getJson(j, "context.json", OutPutRoot);
+    context = j.get<outline::Context>();
+}
+
+TEST(JsonToStrut, testContributor) {
+    outline::Contributor contributor;
+    json j;
+    getJson(j, "contributor.json", OutPutRoot);
+    contributor = j.get<outline::Contributor>();
+}
+
+TEST(JsonToStrut, testMetadata) {
+    outline::Metadata metadata;
+    json j;
+    getJson(j, "metadata.json", OutPutRoot);
+    metadata = j.get<outline::Metadata>();
+}
+
+TEST(JsonToStrut, testBook) {
+    json j;
+    getJson(j, "book.json", OutPutRoot);
+    Book book = j.get<Book>();
     cout << book << endl;
 }
 
 TEST(test, testCreateBuild) {
-    Book book(OriginRoot + "missing 2.json");
-    book.CreateBuild(OutPutRoot);
+//    Book book(OriginRoot + "missing 2.json");
+//    book.CreateBuild(OutPutRoot);
 }

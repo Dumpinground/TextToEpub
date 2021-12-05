@@ -1,19 +1,25 @@
 {
-    "title": "",
-    "subtitle": "",
-    "volume": "",
-    "author": "",
-    "cover": "",
-    "illustrator": "",
-    "extraContributor": [],
     "context": {
-        "preface": "",
-        "preface2": "",
+        "afterword": "",
         "chapter": [],
-        "afterword": ""
+        "preface": "",
+        "preface2": ""
+    },
+    "contributor": {
+        "author": "",
+        "illustrator": "",
+        "others": []
     },
     "illustration": {
         "color": [],
         "gray": []
+    },
+    "metadata": {
+        "backCover": "",
+        "cover": "",
+        "extra": [],
+        "subtitle": "",
+        "title": "",
+        "volume": ""
     }
 }
