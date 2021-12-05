@@ -9,12 +9,14 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <pugixml.hpp>
 
 using namespace std;
 using json = nlohmann::json;
 
 #define OutPutRoot string("../test/result/")
 #define OriginRoot string("../test/origin/")
+#define TemplateRoot string("../template/template")
 
 void saveJson(const json &j, const string &name, const string& root = OutPutRoot) {
     ofstream o(root + name);
@@ -44,6 +46,12 @@ TEST(test, testJson) {
     };
 
     saveJson(j2, "j2");
+}
+
+TEST(test, testXML) {
+    pugi::xml_document doc;
+    pugi::xml_parse_result result = doc.load_file(TemplateRoot.data());
+    cout << "Load result: " << result.description() << ", mesh name: " << doc.child("mesh").attribute("name").value() << endl;
 }
 
 TEST(test, testGetJson) {
@@ -113,12 +121,14 @@ TEST(JsonToStrut, testMetadata) {
 
 TEST(JsonToStrut, testBook) {
     json j;
-    getJson(j, "book.json", OutPutRoot);
+    getJson(j, "missing 2.json");
     Book book = j.get<Book>();
     cout << book << endl;
 }
 
 TEST(test, testCreateBuild) {
-//    Book book(OriginRoot + "missing 2.json");
-//    book.CreateBuild(OutPutRoot);
+    json j;
+    getJson(j, "missing 2.json");
+    Book book = j.get<Book>();
+    book.CreateBuild(OutPutRoot);
 }

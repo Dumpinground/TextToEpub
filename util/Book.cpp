@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -23,20 +24,24 @@ std::ostream &operator<<(std::ostream &out, Book &book) {
 }
 
 void Book::CreateBuild(const string &path) {
-    string command;
-    sprintf(command.data(), "md %s/", path.data());
-
-    auto mkdir = [&command] (const string &path) {
-        cout << command + path << endl;
+    auto mkdir = [] (const string &path) {
+        string command = "md " + path;
+        cout << command << endl;
+        system(command.data());
     };
 
-    string dir_name;
-    sprintf(dir_name.data(), "[%s].%s%s.%s",
-            contributor.author.data(),
-            metadata.title.data(),
-            metadata.subtitle.data(),
-            metadata.volume.data());
-    mkdir(dir_name);
+    string dir_name = "[" + contributor.author + "]." + metadata.title + metadata.subtitle + "." + metadata.volume;
+    string dir_path = path + dir_name + "/";
 
-//    system(command + "");
+    mkdir(dir_path);
+    mkdir(dir_path + "META-INF/");
+    mkdir(dir_path + "OEBPS/");
+    ofstream os(dir_path + "mimetype");
+    os << "application/epub+zip";
+    os.close();
+//    os.open(dir_path + "META-INF/container.xml");
+
+    mkdir(dir_path + "OEBPS/Images");
+    mkdir(dir_path + "OEBPS/Styles");
+    mkdir(dir_path + "OEBPS/Text");
 }

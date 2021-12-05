@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(TextToEpub)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 11)
 
 include(FetchContent)
 
@@ -29,6 +29,20 @@ if(NOT json_POPULATED)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+#xml
+FetchContent_Declare(
+        xml
+        GIT_REPOSITORY https://github.com/zeux/pugixml
+        GIT_TAG v1.11.4
+)
+
+FetchContent_GetProperties(xml)
+
+if(NOT xml_POPULATED)
+    FetchContent_Populate(xml)
+    add_subdirectory(${xml_SOURCE_DIR} ${xml_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 enable_testing()
 
 file(GLOB UTIL_SRC "util/*.h" "util/*.cpp")
@@ -48,8 +62,8 @@ add_executable(TextToEpub
         )
 
 include(GoogleTest json)
-target_link_libraries(TextToEpub
-        gtest_main nlohmann_json::nlohmann_json
+target_link_libraries(TextToEpub PRIVATE
+        gtest_main nlohmann_json::nlohmann_json pugixml::static
         )
 
 gtest_discover_tests(TextToEpub)
