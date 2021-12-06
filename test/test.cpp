@@ -16,7 +16,7 @@ using json = nlohmann::json;
 
 #define OutPutRoot string("../test/result/")
 #define OriginRoot string("../test/origin/")
-#define TemplateRoot string("../template/template")
+#define TemplateRoot string("../template/")
 
 void saveJson(const json &j, const string &name, const string& root = OutPutRoot) {
     ofstream o(root + name);
@@ -50,8 +50,10 @@ TEST(test, testJson) {
 
 TEST(test, testXML) {
     pugi::xml_document doc;
-    pugi::xml_parse_result result = doc.load_file(TemplateRoot.data());
-    cout << "Load result: " << result.description() << ", mesh name: " << doc.child("mesh").attribute("name").value() << endl;
+    pugi::xml_parse_result result = doc.load_file((TemplateRoot + "container.xml").data());
+    cout << "Load result: " << result.description() << endl
+    << ", mesh name: " << doc.child("container").child("rootfiles").child("rootfile").attribute("full-path").value() << endl;
+    doc.save_file((TemplateRoot + "new container.xml").data());
 }
 
 TEST(test, testGetJson) {
