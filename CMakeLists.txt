@@ -43,6 +43,17 @@ if(NOT xml_POPULATED)
     add_subdirectory(${xml_SOURCE_DIR} ${xml_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+#Boost
+#FetchContent_Declare(
+#        Boost
+#        GIT_REPOSITORY https://github.com/boostorg/boost_install
+#        GIT_TAG boost-1.77.0
+#)
+#
+#FetchContent_GetProperties(Boost)
+
+add_subdirectory(boost-cmake)
+
 enable_testing()
 
 file(GLOB UTIL_SRC "util/*.h" "util/*.cpp")
@@ -65,5 +76,8 @@ include(GoogleTest json)
 target_link_libraries(TextToEpub PRIVATE
         gtest_main nlohmann_json::nlohmann_json pugixml::static
         )
+
+target_link_libraries(TextToEpub PUBLIC Boost::filesystem)
+target_link_libraries(TextToEpub PUBLIC Boost::boost)
 
 gtest_discover_tests(TextToEpub)

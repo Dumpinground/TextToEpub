@@ -7,16 +7,17 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <pugixml.hpp>
+#include <boost/filesystem.hpp>
+#include <codecvt>
 
 using namespace std;
 using json = nlohmann::json;
 
 #define OutPutRoot string("../test/result/")
 #define OriginRoot string("../test/origin/")
-#define TemplateRoot string("../template/")
+#define AccessibleEpub3Root string("F:/Epub/learn/accessible_epub_3/")
 
 void saveJson(const json &j, const string &name, const string& root = OutPutRoot) {
     ofstream o(root + name);
@@ -52,8 +53,22 @@ TEST(test, testXML) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file((TemplateRoot + "container.xml").data());
     cout << "Load result: " << result.description() << endl
-    << ", mesh name: " << doc.child("container").child("rootfiles").child("rootfile").attribute("full-path").value() << endl;
+         << ", mesh name: " << doc.child("container").child("rootfiles").child("rootfile").attribute("full-path").value() << endl;
     doc.save_file((TemplateRoot + "new container.xml").data());
+}
+
+TEST(test, testXHTML) {
+    pugi::xml_document doc;
+    pugi::xml_parse_result result = doc.load_file((AccessibleEpub3Root + "EPUB/ch01.xhtml").data());
+    cout << "Load result: " << result.description() << endl;
+    doc.save_file((TemplateRoot + "chapter.xhtml").data());
+}
+
+TEST(test, testOpf) {
+    pugi::xml_document doc;
+    pugi::xml_parse_result result = doc.load_file((AccessibleEpub3Root + "EPUB/package.opf").data());
+    cout << "Load result: " << result.description() << endl;
+    doc.save_file((TemplateRoot + "package.opf").data());
 }
 
 TEST(test, testGetJson) {
@@ -128,9 +143,65 @@ TEST(JsonToStrut, testBook) {
     cout << book << endl;
 }
 
+TEST(test, testSystem) {
+    system("sudo md ../test/result/1");
+}
+
+TEST(test, testFileSystem) {
+    boost::filesystem::path path(ImagesRoot);
+    boost::filesystem::directory_iterator dir_end;
+    for (boost::filesystem::directory_iterator dir_it(path); dir_it != dir_end; ++dir_it) {
+        cout << dir_it->path().filename() << endl;
+    }
+}
+
+TEST(test, testCodeCvt) {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt_utf;
+    string str = "../test/result/[甲]/";
+    std::wstring wstr;
+    wstr = cvt_utf.from_bytes(str);
+    str = cvt_utf.to_bytes(wstr);
+    boost::filesystem::create_directory(wstr);
+}
+
+TEST(test, testMkDir) {
+
+    mkDir("../test/result/book_dir/", [](const string &path) {
+
+        ofstream os(path + "mimetype");
+        os << "application/epub+zip";
+        os.close();
+
+        mkDir(path + "META-INF/", [](const string &path) {
+            pugi::xml_document doc;
+            doc.load_file((TemplateRoot + "container.xml").data());
+            bool flag = doc.save_file((path + "container.xml").data());
+            cout << flag << endl;
+        });
+
+        mkDir(path + "EPUB/", [](const string &path) {
+            mkDir(path + "Styles/");
+            mkDir(path + "Text/");
+            mkDir(path + "Images/", [](const string &path) {
+                boost::filesystem::path image_path(ImagesRoot);
+                boost::filesystem::directory_iterator dir_end;
+                for (boost::filesystem::directory_iterator dir_it(image_path); dir_it != dir_end; ++dir_it) {
+                    cout << dir_it->path().string() << " " << path + dir_it->path().filename().string() << endl;
+                    ifstream i(dir_it->path().string(), ios_base::binary);
+                    ofstream o(path + dir_it->path().filename().string(), ios_base::binary);
+                    o << i.rdbuf();
+                }
+            });
+        });
+    });
+
+    boost::filesystem::rename("../test/result/book_dir/", WS("../test/result/[甲].Ⅱ/"));
+}
+
 TEST(test, testCreateBuild) {
     json j;
     getJson(j, "missing 2.json");
     Book book = j.get<Book>();
     book.CreateBuild(OutPutRoot);
+//    book.PackBuild();
 }

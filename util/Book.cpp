@@ -4,9 +4,10 @@
 
 #include "Book.h"
 
-#include <iostream>
-#include <fstream>
 #include <iomanip>
+#include <pugixml.hpp>
+#include <boost/filesystem.hpp>
+#include <codecvt>
 
 using namespace std;
 
@@ -23,25 +24,66 @@ std::ostream &operator<<(std::ostream &out, Book &book) {
     return out;
 }
 
+//code transformer  utf-8 -> utf-16
+std::wstring WS(const string &s)  {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt_utf;
+    return cvt_utf.from_bytes(s);
+}
+
+void mkDir(const string &path, const function<void(const string &path)> &visit) {
+    boost::filesystem::create_directory(WS(path));
+    visit(path);
+}
+
+string Book::eBookName() const {
+    return "[" + contributor.author + "]." + metadata.title + metadata.subtitle + "." + metadata.volume;
+}
+
+//copy all files in the src_path
+void copyFiles(const string &src_path, const string &dist_path) {
+    boost::filesystem::path path(src_path);
+    boost::filesystem::directory_iterator dir_end;
+    for (boost::filesystem::directory_iterator dir_it(path); dir_it != dir_end; ++dir_it) {
+        boost::filesystem::copy(dir_it->path(), WS(dist_path + dir_it->path().filename().string()) );
+//        ifstream i(dir_it->path().string(), ios_base::binary);
+//        ofstream o(dist_path + dir_it->path().filename().string(), ios_base::binary);
+//        o << i.rdbuf();
+    }
+}
+
 void Book::CreateBuild(const string &path) {
-    auto mkdir = [] (const string &path) {
-        string command = "md " + path;
-        cout << command << endl;
-        system(command.data());
-    };
 
-    string dir_name = "[" + contributor.author + "]." + metadata.title + metadata.subtitle + "." + metadata.volume;
+    book_dir = path;
+    pugi::xml_document doc;
+
     string dir_path = path + dir_name + "/";
+    mkDir(dir_path, [](const string &path) {
 
-    mkdir(dir_path);
-    mkdir(dir_path + "META-INF/");
-    mkdir(dir_path + "OEBPS/");
-    ofstream os(dir_path + "mimetype");
-    os << "application/epub+zip";
-    os.close();
-//    os.open(dir_path + "META-INF/container.xml");
+        ofstream os(path + "mimetype");
+        os << "application/epub+zip";
+        os.close();
 
-    mkdir(dir_path + "OEBPS/Images");
-    mkdir(dir_path + "OEBPS/Styles");
-    mkdir(dir_path + "OEBPS/Text");
+        mkDir(path + "META-INF/", [](const string &path) {
+            pugi::xml_document doc;
+            doc.load_file((TemplateRoot + "container.xml").data());
+            doc.save_file((path + "container.xml").data());
+        });
+
+        mkDir(path + "EPUB/", [](const string &path) {
+
+            pugi::xml_document doc;
+            doc.load_file((TemplateRoot + "package.opf").data());
+            doc.save_file((path + "package.opf").data());
+
+            mkDir(path + "Styles/");
+            mkDir(path + "Images/", [](const string &path) {
+//                copyFiles(ImagesRoot, path);
+            });
+        });
+    });
+}
+
+void Book::PackBuild() {
+    if (!book_dir.empty())
+        boost::filesystem::rename(book_dir + dir_name, WS(book_dir + eBookName()));
 }
