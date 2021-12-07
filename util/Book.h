@@ -58,6 +58,10 @@ namespace outline {
 
 }
 
+namespace content {
+
+}
+
 class Book {
 
 private:
