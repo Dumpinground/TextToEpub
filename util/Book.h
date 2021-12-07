@@ -60,6 +60,26 @@ namespace outline {
 
 namespace content {
 
+    struct Section {
+
+        // <section><h4 class = "title"> title </h4>
+        string title;
+
+        std::vector<string> separator;
+
+        // <p>
+        std::vector<string> p;
+    };
+
+    struct Chapter {
+
+        string lang;
+
+        // <h2 class = "title> title </h2>
+        string title;
+
+        std::vector<Section> sections;
+    };
 }
 
 class Book {
