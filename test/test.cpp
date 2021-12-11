@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <string>
-#include <pugixml.hpp>
 #include <boost/filesystem.hpp>
 #include <codecvt>
 
@@ -18,15 +17,18 @@ using json = nlohmann::json;
 #define OutPutRoot string("../test/result/")
 #define OriginRoot string("../test/origin/")
 #define AccessibleEpub3Root string("F:/Epub/learn/accessible_epub_3/")
+#define MissingRoot string("F:/Epub/Missing/")
 
 void saveJson(const json &j, const string &name, const string& root = OutPutRoot) {
     ofstream o(root + name);
     o << setw(2) << j << endl;
 }
 
-void getJson(json &j, const string &name, const string& root = OriginRoot) {
+json getJson(const string &name, const string& root = OriginRoot) {
+    json j;
     ifstream i(root + name);
     i  >> j;
+    return j;
 }
 
 TEST(test, testJson) {
@@ -73,9 +75,9 @@ TEST(test, testOpf) {
 
 TEST(test, testGetJson) {
     json j;
-    getJson(j, "j2.json");
+    j = getJson("j2.json");
     cout << j["happy"] << j["name"] << endl;
-    getJson(j, "missing 2.json");
+    j = getJson("missing 2.json");
     cout << j["title"] << endl;
 }
 
@@ -84,12 +86,12 @@ TEST(test, testNewBook) {
 }
 
 TEST(StructToJson, testIllustration) {
-    outline::Illustration illustration;
-    saveJson(illustration, "illustration.json");
+    outline::Illustrations illustrations;
+    saveJson(illustrations, "illustration.json");
 }
 
 TEST(StructToJson, testContext) {
-    outline::Context context;
+    outline::Content context;
     saveJson(context, "context.json");
 }
 
@@ -109,36 +111,31 @@ TEST(StructToJson, testBook) {
 }
 
 TEST(JsonToStrut, testIllustration) {
-    outline::Illustration illustration;
-    json j;
-    getJson(j, "illustration.json", OutPutRoot);
-    illustration = j.get<outline::Illustration>();
+    outline::Illustrations illustrations;
+    json j = getJson("illustration.json", OutPutRoot);
+    illustrations = j.get<outline::Illustrations>();
 }
 
 TEST(JsonToStrut, testContext) {
-    outline::Context context;
-    json j;
-    getJson(j, "context.json", OutPutRoot);
-    context = j.get<outline::Context>();
+    outline::Content context;
+    json j = getJson("context.json", OutPutRoot);
+    context = j.get<outline::Content>();
 }
 
 TEST(JsonToStrut, testContributor) {
     outline::Contributor contributor;
-    json j;
-    getJson(j, "contributor.json", OutPutRoot);
+    json j = getJson("contributor.json", OutPutRoot);
     contributor = j.get<outline::Contributor>();
 }
 
 TEST(JsonToStrut, testMetadata) {
     outline::Metadata metadata;
-    json j;
-    getJson(j, "metadata.json", OutPutRoot);
+    json j = getJson("metadata.json", OutPutRoot);
     metadata = j.get<outline::Metadata>();
 }
 
 TEST(JsonToStrut, testBook) {
-    json j;
-    getJson(j, "missing 2.json");
+    json j = getJson("missing 2.json");
     Book book = j.get<Book>();
     cout << book << endl;
 }
@@ -199,9 +196,121 @@ TEST(test, testMkDir) {
 }
 
 TEST(test, testCreateBuild) {
-    json j;
-    getJson(j, "missing 2.json");
-    Book book = j.get<Book>();
+    Book book = getJson("missing 2.json").get<Book>();
     book.CreateBuild(OutPutRoot);
 //    book.PackBuild();
+}
+
+TEST(testChapter, testSection) {
+    context::Section s;
+    saveJson(s, "section.json");
+}
+
+TEST(testChapter, testChapter) {
+    context::Chapter chapter;
+    saveJson(chapter, "chapter.json");
+}
+
+TEST(testChapter, testXML) {
+    context::Chapter chapter = getJson("chapter1.json").get<context::Chapter>();
+    chapter.to_xml(OutPutRoot + "chapter1.xhtml");
+}
+
+TEST(testChapter, testXML2) {
+    context::Chapter chapter = getJson("missing 2 chapter 1.json").get<context::Chapter>();
+    chapter.to_xml(OutPutRoot + "missing 2/chapter 1.xhtml");
+}
+
+TEST(testChapter, testReg) {
+    string text[] = {"  1  ", "1  ", "  1", "及  1 和 "};
+    for (const auto &t: text) {
+        cout << t << " -> " << find("1", t) << endl;
+    }
+}
+
+TEST(test, testCode) {
+    wchar_t L = L'　';
+    wchar_t L2 = L'＊';
+    wprintf(L"\\u%d \\u%d", L, L2);
+}
+
+TEST(testChapter, testFindSection) {
+    string txt_path = MissingRoot + "text/missing 2.txt";
+    Book book = getJson("missing 2.json");
+
+    string exp;
+    ifstream i(OriginRoot + "Reg.txt");
+    i >> exp;
+    i.close();
+    regex expression(exp);
+
+    i.open(txt_path);
+    string line;
+    while (!i.eof()) {
+        getline(i, line);
+        if (regex_match(line, expression)) {
+            cout << line << endl;
+        }
+    }
+}
+
+TEST(testChapter, testFindTitle) {
+    string txt_path = MissingRoot + "text/missing 2.txt";
+    Book book = getJson("missing 2.json");
+    auto chapter = book.content.chapters.begin();
+    string separator = "＊";
+
+    auto wrap = [](const vector<string> &v)->string {
+        string wrapped = boost::join(v, "|");
+        wrapped = "^[\\s　]*(" + wrapped + ")$";
+//        cout << wrapped << endl;
+        return wrapped;
+    };
+
+    smatch result;
+    regex *expression;
+
+    auto expressionUpdate = [&]() {
+        string wrapped = wrap({*chapter, "[0-9]", separator});
+        expression = new regex(wrapped);
+    };
+
+    expressionUpdate();
+
+    ifstream i(txt_path);
+    string line;
+    while (!i.eof()) {
+        getline(i, line);
+        if (regex_match(line, result, *expression)) {
+            cout << result.str() << endl;
+
+            if (result.str() == *chapter) {
+                if (chapter != book.content.chapters.end())
+                    chapter++;
+                if (chapter != book.content.chapters.end())
+                    expressionUpdate();
+            }
+        }
+    }
+}
+
+TEST(testChapter, testChapterVector) {
+    context::Chapter *chapter;
+    chapter = new context::Chapter("zh-CN", "1");
+    vector<context::Chapter *> chapters;
+    chapters.emplace_back(chapter);
+    chapter->paragraphs.emplace_back("read it");
+    cout << chapters[0]->paragraphs.empty() << endl;
+}
+
+TEST(testChapter, testLoad) {
+    pugi::xml_document doc;
+    auto result = doc.load_file((AccessibleEpub3Root + "EPUB/ch01.xhtml").data());
+
+    cout << result << endl;
+}
+
+TEST(testBook, testExtractChapter) {
+    Book book = getJson("missing 2.json").get<Book>();
+    book.extractChapter(TextRoot + "missing 2 chapters.txt", OutPutRoot + "text/");
 }

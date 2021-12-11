@@ -5,9 +5,9 @@
 #include "Book.h"
 
 #include <iomanip>
-#include <pugixml.hpp>
 #include <boost/filesystem.hpp>
 #include <codecvt>
+#include <utility>
 
 using namespace std;
 
@@ -33,6 +33,11 @@ std::wstring WS(const string &s)  {
 void mkDir(const string &path, const function<void(const string &path)> &visit) {
     boost::filesystem::create_directory(WS(path));
     visit(path);
+}
+
+bool find(const string& target, const string& text) {
+    regex expression("^\\s*" + target + "\\s*$");
+    return regex_match(text, expression);
 }
 
 string Book::eBookName() const {
@@ -87,3 +92,110 @@ void Book::PackBuild() {
     if (!book_dir.empty())
         boost::filesystem::rename(book_dir + dir_name, WS(book_dir + eBookName()));
 }
+
+string Book::wrap(string wrapped) const {
+    string whitespace = boost::join(metadata.whitespace, "|");
+    wrapped = "^[\\s" + whitespace + "]*(" + wrapped + ")$";
+    return wrapped;
+}
+
+void Book::extractChapter(const string &inputTextPath, const string &outPutDir) {
+    ifstream text(inputTextPath);
+    string line;
+
+    auto chapterTitle = content.chapters.begin();
+
+//    regex *title_exp, *section_exp;
+    map<string, regex*> expression;
+    expression["chapter"] = new regex(wrap(*chapterTitle));
+    expression["section"] = new regex(wrap("[0-9]"));
+    expression["separator"] = new regex(wrap(boost::join(metadata.separators, "|")));
+    context::Chapter *chapter;
+
+    while (!text.eof()) {
+
+        getline(text, line);
+
+        if (regex_match(line, *expression["chapter"])) {
+
+            chapter = new context::Chapter("zh-CN", *chapterTitle);
+            chapters.emplace_back(chapter);
+
+            if (chapterTitle != content.chapters.end())
+                ++chapterTitle;
+            if (chapterTitle != content.chapters.end())
+                expression["chapter"] = new regex(wrap(*chapterTitle));
+        } else {
+            if (regex_match(line, *expression["section"])) {
+
+            } else {
+                if (regex_match(line, *expression["separator"])) {
+
+                }
+                chapter->paragraphs.emplace_back(line);
+            }
+        }
+    }
+
+    for (auto c: chapters) {
+        cout << c->title << endl;
+    }
+}
+
+context::Section::Section() = default;
+
+context::Section::Section(const Section &section) = default;
+
+context::Section::Section(string title)
+: title(std::move(title)), separators(), paragraphs() {}
+
+pugi::xml_node context::Section::append(pugi::xml_node &node) const {
+    auto section = node.append_child("section");
+    section.append_attribute("title") = title.data();
+    section.append_child("h4").append_attribute("class") = "title";
+    section.child("h4").text() = title.data();
+    for (const auto &p: paragraphs) {
+        section.append_child("p").text() = p.data();
+    }
+    return section;
+}
+
+void context::Chapter::to_xml(const string &path) {
+
+    doc.load_file((TemplateRoot + "chapter.xhtml").data());
+
+    pugi::xml_node html = doc.child("html");
+    html.attribute("xml:lang") = lang.data();
+    html.attribute("lang") = lang.data();
+    html.child("head").child("title").text() = title.data();
+
+    pugi::xml_node body = html.child("body");
+    auto section = append(body);
+    section.append_attribute("class") = "chapter";
+    section.append_attribute("epub:type") = "chapter";
+    section.child("h4").set_name("h2");
+
+    if (!sections.empty()) {
+        for (const auto &s: sections) {
+            s->append(section);
+        }
+    }
+    doc.save_file(path.data());
+}
+
+context::Chapter::Chapter() = default;
+
+context::Chapter::Chapter(const context::Chapter &chapter)
+: Section(chapter), lang(chapter.lang), sections(chapter.sections) {}
+
+context::Chapter::Chapter(string lang, const string &title)
+: Section(title), lang(std::move(lang)), sections() {}
+
+//void context::Chapter::set_title(const string &title) {
+//    this->title = title;
+//    expression = new regex(wrap(title));
+//}
+//
+//bool context::Chapter::find_title(const string &line) {
+//    return regex_match(line, *expression);
+//}

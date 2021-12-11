@@ -1,7 +1,7 @@
 {
     "context": {
         "afterword": "",
-        "chapter": [],
+        "chapters": [],
         "preface": "",
         "preface2": ""
     },
@@ -10,7 +10,7 @@
         "illustrator": "",
         "others": []
     },
-    "illustration": {
+    "illustrations": {
         "color": [],
         "gray": []
     },

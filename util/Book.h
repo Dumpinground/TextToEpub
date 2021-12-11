@@ -10,6 +10,9 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <pugixml.hpp>
+#include <regex>
+#include <boost/algorithm/string.hpp>
 
 using string = std::string;
 using json = nlohmann::json;
@@ -26,18 +29,18 @@ json newJson();
 
 namespace outline {
 
-    struct Context {
+    struct Content {
         string preface, preface2;
-        std::vector<string> chapter;
+        std::vector<string> chapters;
         string afterword;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Context, preface, preface2, chapter, afterword)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Content, preface, preface2, chapters, afterword)
     };
 
-    struct Illustration {
+    struct Illustrations {
         std::vector<string> color, gray;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Illustration, color, gray)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Illustrations, color, gray)
     };
 
     struct Contributor {
@@ -49,36 +52,58 @@ namespace outline {
 
     struct Metadata {
         string title, subtitle, volume, cover, backCover;
-        std::vector<string> extra;
+        std::vector<string> whitespace, separators, extra;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Metadata, title, subtitle, volume, cover, backCover, extra)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Metadata, title, subtitle, volume, cover, backCover, whitespace, separators, extra)
     };
 
 //    TODO translator
 
 }
 
-namespace content {
+namespace context {
 
     struct Section {
 
         // <section><h4 class = "title"> title </h4>
         string title;
 
-        std::vector<string> separator;
+        std::vector<int> separators;
 
         // <p>
-        std::vector<string> p;
+        std::vector<string> paragraphs;
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Section, title, separators, paragraphs)
+
+        pugi::xml_node append(pugi::xml_node &node) const;
+
+        Section();
+        Section(const Section &section);
+        Section(string title);
     };
 
-    struct Chapter {
+    struct Chapter : public Section {
 
         string lang;
+        std::vector<Section *> sections;
 
-        // <h2 class = "title> title </h2>
-        string title;
+//        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Chapter, lang, sections, title, separators, paragraphs)
 
-        std::vector<Section> sections;
+        Chapter();
+        Chapter(const Chapter &chapter);
+        Chapter(string lang, const string &title);
+
+        void to_xml(const string &path);
+
+        void load_xml();
+
+//        void set_title(const string &title);
+//
+//        bool find_title(const string &line);
+
+    private:
+        pugi::xml_document doc;
+//        std::regex *expression;
     };
 }
 
@@ -93,23 +118,32 @@ public:
 
     outline::Metadata metadata;
     outline::Contributor contributor;
-    outline::Context context;
-    outline::Illustration illustration;
+    outline::Content content;
+    outline::Illustrations illustrations;
 
     Book();
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, context, illustration)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, content, illustrations)
+
+    std::vector<context::Chapter *> chapters;
 
     string eBookName() const;
 
     void CreateBuild(const string &path);
     void PackBuild();
 
+    string wrap(string wrapped) const;
+    void extractChapter(const string &inputTextPath, const string &outPutDir);
+
+    bool find(const string& text);
+
     friend std::ostream &operator<<(std::ostream &out, Book &book);
 };
 
 std::wstring WS(const string &s);
 
-void mkDir(const string &path, const std::function<void(const string &path)> &visit = [](const string &path) {});
+void mkDir(const string &path, const std::function<void(const string &path)> &visit = [] (const string &path) {});
+
+bool find(const string& target, const string& text);
 
 #endif //TEXTTRANSFORM_BOOK_H
