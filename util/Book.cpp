@@ -98,80 +98,153 @@ string Book::wrap(string wrapped) const {
     return wrapped;
 }
 
-void Book::extractChapter(const string &inputTextPath, const string &outPutDir, bool showContent) {
+void Book::extract(const string &inputTextPath, const string &outPutDir, bool showContent) {
     ifstream text(inputTextPath);
     string line;
     whitespace = boost::join(metadata.whitespace, "") + "\\s";
 
+    auto colorImageName = illustrations.color.begin();
     auto chapterTitle = content.chapters.begin();
 
     context::Chapter *chapter;
     context::Section *section;
 
+    map<string, bool> flag;
     map<string, regex*> expression;
 
+    expression["start"] = new regex("^" + metadata.title);
+    expression["preface"] = new regex(wrap(content.preface));
+    expression["illustration"] = new regex("^\\[" + *colorImageName + "\\]" );
+    expression["preface2"] = new regex(wrap(content.preface2));
     expression["chapter"] = new regex(wrap(*chapterTitle));
+    expression["afterword"] = new regex(wrap(content.afterword));
+
     expression["separator"] = new regex(wrap(boost::join(metadata.separators, "|")));
+    expression["space"] = new regex("^[" + whitespace + "]*");
 
-    regex findSpace("^[" + whitespace + "]*");
-
-    auto appendParagraph = [&expression, &line, &findSpace] (context::Section *section) {
+    auto appendParagraph = [&expression, &line] (context::Section *section) {
         if (regex_match(line, *expression["separator"])) {
             int index = section->paragraphs.size();
             section->separators.emplace_back(index);
 
-            line = regex_replace(line, findSpace, "");
+            line = regex_replace(line, *expression["space"], "");
+        }
+
+        if (!line.empty()) {
+            section->setInterval();
         }
 
         section->paragraphs.emplace_back(line);
     };
     bool sectionMode = false;
 
+    auto checkStatus = [&] (const string &status,
+            const function<void()> &before = [] {},
+            const function<void()> &begin = [] {}) {
+        flag[status] = regex_match(line, *expression[status]);
+        if (!flag[status]) {
+            before();
+        } else {
+            begin();
+        }
+    };
+
+    auto newChapter = [&] {
+        chapter = new context::Chapter("zh-CN", *chapterTitle);
+        chapter->nextSection = metadata.sectionNumberBegin;
+        expression["section"] = new regex(wrap(to_string(chapter->nextSection)));
+        chapters.emplace_back(chapter);
+        sectionMode = false;
+
+        if (chapterTitle != content.chapters.end())
+            ++chapterTitle;
+        if (chapterTitle != content.chapters.end())
+            expression["chapter"] = new regex(wrap(*chapterTitle));
+    };
+
     while (!text.eof()) {
 
         getline(text, line);
 
-        if (line.empty())
-            continue;
-
-        if (regex_match(line, *expression["chapter"])) {
-
-            chapter = new context::Chapter("zh-CN", *chapterTitle);
-            chapter->nextSection = metadata.sectionNumberBegin;
-            expression["section"] = new regex(wrap(to_string(chapter->nextSection)));
-            chapters.emplace_back(chapter);
-            sectionMode = false;
-
-            if (chapterTitle != content.chapters.end())
-                ++chapterTitle;
-            if (chapterTitle != content.chapters.end())
-                expression["chapter"] = new regex(wrap(*chapterTitle));
-
+        if (!flag["preface"]) {
+            checkStatus("preface", [] {}, [&] {
+                preface = new context::Chapter("zh-CN",content.preface);
+            });
             continue;
         }
 
-        if (regex_match(line, *expression["section"])) {
-            section = new context::Section();
-            section->title = line.back();
-            chapter->sections.emplace_back(section);
-            expression["section"] = new regex(wrap(to_string(++chapter->nextSection)));
-            sectionMode = true;
-        } else {
-            appendParagraph(sectionMode ? section : chapter);
+//        if (!flag["illustration"]) {
+//            flag["illustration"] = regex_match(line, *expression["illustration"]);
+//            if (!flag["illustration"]) {
+//
+//                appendParagraph(preface);
+//            }
+//            continue;
+//        }
+
+        if (!flag["preface2"]) {
+            checkStatus("preface2", [&] {
+                appendParagraph(preface);
+                }, [&] {
+                preface2 = new context::Chapter("zh-CN", content.preface2);
+            });
+            continue;
         }
 
+        if (!flag["chapter"]) {
+            checkStatus("chapter", [&] {
+                appendParagraph(preface2);
+                }, [&] {
+                newChapter();
+            });
+            continue;
+        }
+
+        if (!flag["afterword"]) {
+            checkStatus("afterword", [&] {
+
+                if (regex_match(line, *expression["chapter"])) {
+                    newChapter();
+                } else if (regex_match(line, *expression["section"])) {
+                    section = new context::Section();
+                    section->title = line.back();
+                    chapter->sections.emplace_back(section);
+                    expression["section"] = new regex(wrap(to_string(++chapter->nextSection)));
+                    sectionMode = true;
+                } else {
+                    appendParagraph(sectionMode ? section : chapter);
+                }
+
+            }, [&] {
+                afterword = new context::Chapter("zh-CN", content.afterword);
+            });
+            continue;
+        }
+
+        appendParagraph(afterword);
     }
 
-    if (showContent)
+    if (showContent) {
         for (auto c: chapters) {
             cout << *c << endl;
         }
+    }
 
     string name;
+
+    name = "preface.xhtml";
+    preface->to_xml(outPutDir + name);
+
+    name = "preface2.xhtml";
+    preface2->to_xml(outPutDir + name);
+
     for (int i = 0; i < chapters.size(); ++i) {
         name = "chapter" + to_string(i) + ".xhtml";
         chapters[i]->to_xml(outPutDir + name);
     }
+
+    name = "afterword.xhtml";
+    afterword->to_xml(outPutDir + name);
 }
 
 context::Section::Section() = default;
@@ -187,9 +260,14 @@ pugi::xml_node context::Section::append(pugi::xml_node &node) const {
     section.append_child("h4").append_attribute("class") = "title";
     section.child("h4").text() = title.data();
 
-    for (int i = 0, j = 0; i < paragraphs.size(); ++i) {
+    for (int i = min_index, j = 0; i <= max_index; ++i) {
+
         auto p = section.append_child("p");
-        p.text() = paragraphs[i].data();
+
+        if (paragraphs[i].empty())
+            p.append_child("br");
+        else
+            p.text() = paragraphs[i].data();
 
         // separators empty -> pass
         if (j < separators.size() && separators[j] == i) {
@@ -206,6 +284,14 @@ ostream &context::operator<<(ostream &out, Section &section) {
         cout << section.paragraphs[i] << endl;
     }
     return out;
+}
+
+/** set the interval of valid index \n
+ *  compared with paragraph.size() \n
+ */
+void context::Section::setInterval() {
+    if (min_index == -1) min_index = paragraphs.size();
+    max_index = max(max_index, paragraphs.size());
 }
 
 ostream &context::operator<<(ostream &out, Chapter &chapter) {

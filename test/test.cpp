@@ -272,5 +272,5 @@ TEST(testChapter, testLoad) {
 
 TEST(testBook, testExtractChapter) {
     Book book = getJson("missing 2.json").get<Book>();
-    book.extractChapter(TextRoot + "missing 2 chapters.txt", OutPutRoot + "text/", false);
+    book.extract("F:/Epub/Missing/text/missing 2.txt", OutPutRoot + "text/", false);
 }

@@ -73,16 +73,22 @@ namespace context {
 
         // <p>
         std::vector<string> paragraphs;
+        int min_index = -1;
+        unsigned long long max_index = 0;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Section, title, separators, paragraphs)
 
         pugi::xml_node append(pugi::xml_node &node) const;
+
+        void to_xml(const string &path);
 
         Section();
         Section(const Section &section);
         Section(string title);
 
         friend std::ostream &operator<<(std::ostream &out, Section &section);
+
+        void setInterval();
     };
 
     std::ostream &operator<<(std::ostream &out, Section &section);
@@ -135,15 +141,14 @@ public:
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, content, illustrations)
 
-    std::vector<context::Chapter *> chapters;
-
     string eBookName() const;
 
     void CreateBuild(const string &path);
     void PackBuild();
 
     string wrap(string wrapped) const;
-    void extractChapter(const string &inputTextPath, const string &outPutDir, bool showContent = false);
+
+    void extract(const string &inputTextPath, const string &outPutDir, bool showContent = false);
 
     bool find(const string& text);
 
@@ -151,6 +156,9 @@ public:
 
 private:
     string whitespace;
+
+    context::Chapter *preface, *preface2, *afterword;
+    std::vector<context::Chapter *> chapters;
 };
 
 std::wstring WS(const string &s);
