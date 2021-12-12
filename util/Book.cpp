@@ -335,12 +335,3 @@ context::Chapter::Chapter(const context::Chapter &chapter)
 
 context::Chapter::Chapter(string lang, const string &title)
 : Section(title), lang(std::move(lang)), sections() {}
-
-//void context::Chapter::set_title(const string &title) {
-//    this->title = title;
-//    expression = new regex(wrap(title));
-//}
-//
-//bool context::Chapter::find_title(const string &line) {
-//    return regex_match(line, *expression);
-//}
