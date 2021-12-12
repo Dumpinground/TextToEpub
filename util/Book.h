@@ -52,9 +52,10 @@ namespace outline {
 
     struct Metadata {
         string title, subtitle, volume, cover, backCover;
+        int sectionNumberBegin;
         std::vector<string> whitespace, separators, extra;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Metadata, title, subtitle, volume, cover, backCover, whitespace, separators, extra)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Metadata, title, subtitle, volume, cover, backCover, sectionNumberBegin, whitespace, separators, extra)
     };
 
 //    TODO translator
@@ -80,12 +81,17 @@ namespace context {
         Section();
         Section(const Section &section);
         Section(string title);
+
+        friend std::ostream &operator<<(std::ostream &out, Section &section);
     };
+
+    std::ostream &operator<<(std::ostream &out, Section &section);
 
     struct Chapter : public Section {
 
         string lang;
         std::vector<Section *> sections;
+        int nextSection;
 
 //        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Chapter, lang, sections, title, separators, paragraphs)
 
@@ -101,10 +107,14 @@ namespace context {
 //
 //        bool find_title(const string &line);
 
+        friend std::ostream &operator<<(std::ostream &out, Chapter &chapter);
+
     private:
         pugi::xml_document doc;
 //        std::regex *expression;
     };
+
+    std::ostream &operator<<(std::ostream &out, Chapter &chapter);
 }
 
 class Book {
@@ -133,11 +143,14 @@ public:
     void PackBuild();
 
     string wrap(string wrapped) const;
-    void extractChapter(const string &inputTextPath, const string &outPutDir);
+    void extractChapter(const string &inputTextPath, const string &outPutDir, bool showContent = false);
 
     bool find(const string& text);
 
     friend std::ostream &operator<<(std::ostream &out, Book &book);
+
+private:
+    string whitespace;
 };
 
 std::wstring WS(const string &s);

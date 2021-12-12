@@ -41,7 +41,7 @@ bool find(const string& target, const string& text) {
 }
 
 string Book::eBookName() const {
-    return "[" + contributor.author + "]." + metadata.title + metadata.subtitle + "." + metadata.volume;
+    return "[" + contributor.author + "]." + metadata.title + " " + metadata.subtitle + "." + metadata.volume;
 }
 
 //copy all files in the src_path
@@ -94,51 +94,83 @@ void Book::PackBuild() {
 }
 
 string Book::wrap(string wrapped) const {
-    string whitespace = boost::join(metadata.whitespace, "|");
-    wrapped = "^[\\s" + whitespace + "]*(" + wrapped + ")$";
+    wrapped = "^[" + whitespace + "]*(" + wrapped + ")$";
     return wrapped;
 }
 
-void Book::extractChapter(const string &inputTextPath, const string &outPutDir) {
+void Book::extractChapter(const string &inputTextPath, const string &outPutDir, bool showContent) {
     ifstream text(inputTextPath);
     string line;
+    whitespace = boost::join(metadata.whitespace, "") + "\\s";
 
     auto chapterTitle = content.chapters.begin();
 
-//    regex *title_exp, *section_exp;
-    map<string, regex*> expression;
-    expression["chapter"] = new regex(wrap(*chapterTitle));
-    expression["section"] = new regex(wrap("[0-9]"));
-    expression["separator"] = new regex(wrap(boost::join(metadata.separators, "|")));
     context::Chapter *chapter;
+    context::Section *section;
+
+    map<string, regex*> expression;
+
+    expression["chapter"] = new regex(wrap(*chapterTitle));
+    expression["separator"] = new regex(wrap(boost::join(metadata.separators, "|")));
+
+    regex findSpace("^[" + whitespace + "]*");
+
+    auto appendParagraph = [&expression, &line, &findSpace] (context::Section *section) {
+        if (regex_match(line, *expression["separator"])) {
+            int index = section->paragraphs.size();
+            section->separators.emplace_back(index);
+
+            line = regex_replace(line, findSpace, "");
+        }
+
+        section->paragraphs.emplace_back(line);
+    };
+    bool sectionMode = false;
 
     while (!text.eof()) {
 
         getline(text, line);
 
+        if (line.empty())
+            continue;
+
         if (regex_match(line, *expression["chapter"])) {
 
             chapter = new context::Chapter("zh-CN", *chapterTitle);
+            chapter->nextSection = metadata.sectionNumberBegin;
+            expression["section"] = new regex(wrap(to_string(chapter->nextSection)));
             chapters.emplace_back(chapter);
+            sectionMode = false;
 
             if (chapterTitle != content.chapters.end())
                 ++chapterTitle;
             if (chapterTitle != content.chapters.end())
                 expression["chapter"] = new regex(wrap(*chapterTitle));
-        } else {
-            if (regex_match(line, *expression["section"])) {
 
-            } else {
-                if (regex_match(line, *expression["separator"])) {
-
-                }
-                chapter->paragraphs.emplace_back(line);
-            }
+            continue;
         }
+
+        if (regex_match(line, *expression["section"])) {
+            section = new context::Section();
+            section->title = line.back();
+            chapter->sections.emplace_back(section);
+            expression["section"] = new regex(wrap(to_string(++chapter->nextSection)));
+            sectionMode = true;
+        } else {
+            appendParagraph(sectionMode ? section : chapter);
+        }
+
     }
 
-    for (auto c: chapters) {
-        cout << c->title << endl;
+    if (showContent)
+        for (auto c: chapters) {
+            cout << *c << endl;
+        }
+
+    string name;
+    for (int i = 0; i < chapters.size(); ++i) {
+        name = "chapter" + to_string(i) + ".xhtml";
+        chapters[i]->to_xml(outPutDir + name);
     }
 }
 
@@ -154,10 +186,37 @@ pugi::xml_node context::Section::append(pugi::xml_node &node) const {
     section.append_attribute("title") = title.data();
     section.append_child("h4").append_attribute("class") = "title";
     section.child("h4").text() = title.data();
-    for (const auto &p: paragraphs) {
-        section.append_child("p").text() = p.data();
+
+    for (int i = 0, j = 0; i < paragraphs.size(); ++i) {
+        auto p = section.append_child("p");
+        p.text() = paragraphs[i].data();
+
+        // separators empty -> pass
+        if (j < separators.size() && separators[j] == i) {
+            p.append_attribute("class") = "tiny title";
+            j++;
+        }
     }
     return section;
+}
+
+ostream &context::operator<<(ostream &out, Section &section) {
+    out << section.title << endl;
+    for (auto i: section.separators) {
+        cout << section.paragraphs[i] << endl;
+    }
+    return out;
+}
+
+ostream &context::operator<<(ostream &out, Chapter &chapter) {
+    out << chapter.title << endl;
+    for (auto i: chapter.separators) {
+        out << chapter.paragraphs[i] << endl;
+    }
+    for (auto s: chapter.sections) {
+        out << *s;
+    }
+    return out;
 }
 
 void context::Chapter::to_xml(const string &path) {

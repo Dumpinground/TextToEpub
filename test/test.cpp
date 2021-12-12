@@ -254,46 +254,6 @@ TEST(testChapter, testFindSection) {
     }
 }
 
-TEST(testChapter, testFindTitle) {
-    string txt_path = MissingRoot + "text/missing 2.txt";
-    Book book = getJson("missing 2.json");
-    auto chapter = book.content.chapters.begin();
-    string separator = "＊";
-
-    auto wrap = [](const vector<string> &v)->string {
-        string wrapped = boost::join(v, "|");
-        wrapped = "^[\\s　]*(" + wrapped + ")$";
-//        cout << wrapped << endl;
-        return wrapped;
-    };
-
-    smatch result;
-    regex *expression;
-
-    auto expressionUpdate = [&]() {
-        string wrapped = wrap({*chapter, "[0-9]", separator});
-        expression = new regex(wrapped);
-    };
-
-    expressionUpdate();
-
-    ifstream i(txt_path);
-    string line;
-    while (!i.eof()) {
-        getline(i, line);
-        if (regex_match(line, result, *expression)) {
-            cout << result.str() << endl;
-
-            if (result.str() == *chapter) {
-                if (chapter != book.content.chapters.end())
-                    chapter++;
-                if (chapter != book.content.chapters.end())
-                    expressionUpdate();
-            }
-        }
-    }
-}
-
 TEST(testChapter, testChapterVector) {
     context::Chapter *chapter;
     chapter = new context::Chapter("zh-CN", "1");
@@ -312,5 +272,5 @@ TEST(testChapter, testLoad) {
 
 TEST(testBook, testExtractChapter) {
     Book book = getJson("missing 2.json").get<Book>();
-    book.extractChapter(TextRoot + "missing 2 chapters.txt", OutPutRoot + "text/");
+    book.extractChapter(TextRoot + "missing 2 chapters.txt", OutPutRoot + "text/", false);
 }
