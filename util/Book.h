@@ -109,18 +109,26 @@ namespace context {
 
         void load_xml();
 
-//        void set_title(const string &title);
-//
-//        bool find_title(const string &line);
-
         friend std::ostream &operator<<(std::ostream &out, Chapter &chapter);
 
     private:
         pugi::xml_document doc;
-//        std::regex *expression;
     };
 
     std::ostream &operator<<(std::ostream &out, Chapter &chapter);
+
+    struct ColorIllustration : public Section {
+        string lang;
+
+        ColorIllustration();
+        ColorIllustration(const ColorIllustration &illustration);
+        ColorIllustration(const string &lang, const string &title);
+
+        void to_xml(const string &path);
+
+    private:
+        pugi::xml_document doc;
+    };
 }
 
 class Book {
@@ -147,6 +155,7 @@ public:
     void PackBuild();
 
     string wrap(string wrapped) const;
+    string imageWrap(string wrapped) const;
 
     void extract(const string &inputTextPath, const string &outPutDir, bool showContent = false);
 
@@ -159,6 +168,7 @@ private:
 
     context::Chapter *preface, *preface2, *afterword;
     std::vector<context::Chapter *> chapters;
+    std::vector<context::ColorIllustration *> colorIllustrations;
 };
 
 std::wstring WS(const string &s);

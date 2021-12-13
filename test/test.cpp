@@ -270,7 +270,12 @@ TEST(testChapter, testLoad) {
     cout << result << endl;
 }
 
+TEST(testIllustration, testWrap) {
+    Book book = getJson("missing 2.json").get<Book>();
+    cout << book.imageWrap(book.illustrations.color[0]) << endl;
+}
+
 TEST(testBook, testExtractChapter) {
     Book book = getJson("missing 2.json").get<Book>();
-    book.extract("F:/Epub/Missing/text/missing 2.txt", OutPutRoot + "text/", false);
+    book.extract(TextRoot + "missing 2.txt", OutPutRoot + "text/", false);
 }

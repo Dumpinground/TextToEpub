@@ -8,6 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <codecvt>
 #include <utility>
+#include <queue>
 
 using namespace std;
 
@@ -98,8 +99,28 @@ string Book::wrap(string wrapped) const {
     return wrapped;
 }
 
+string Book::imageWrap(string wrapped) const {
+    boost::replace_last(wrapped, ".", "\\.");
+    wrapped = "^\\[" + wrapped + "\\]$";
+    return wrapped;
+}
+
+struct StatusProcess {
+    function<void()> begin, process;
+
+//    StatusProcess()
+//    :begin([] {}), process([] {}) {}
+//
+//    StatusProcess(function<void()> begin, function<void()> process)
+//    :begin(std::move(begin)), process(std::move(process)) {}
+};
+
 void Book::extract(const string &inputTextPath, const string &outPutDir, bool showContent) {
     ifstream text(inputTextPath);
+    if (!text.is_open()) {
+        cout << "no file found in " + inputTextPath << endl;
+        return;
+    }
     string line;
     whitespace = boost::join(metadata.whitespace, "") + "\\s";
 
@@ -107,14 +128,25 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
     auto chapterTitle = content.chapters.begin();
 
     context::Chapter *chapter;
+    context::ColorIllustration *colorChapter;
     context::Section *section;
 
     map<string, bool> flag;
     map<string, regex*> expression;
+    map<string, StatusProcess*> statusProcess;
+
+    queue<string> status_queue;
+
+    status_queue.push("start");
+    status_queue.push("preface");
+    status_queue.push("illustration");
+    status_queue.push("preface2");
+    status_queue.push("chapter");
+    status_queue.push("afterword");
 
     expression["start"] = new regex("^" + metadata.title);
     expression["preface"] = new regex(wrap(content.preface));
-    expression["illustration"] = new regex("^\\[" + *colorImageName + "\\]" );
+    expression["illustration"] = new regex(imageWrap(*colorImageName));
     expression["preface2"] = new regex(wrap(content.preface2));
     expression["chapter"] = new regex(wrap(*chapterTitle));
     expression["afterword"] = new regex(wrap(content.afterword));
@@ -138,17 +170,6 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
     };
     bool sectionMode = false;
 
-    auto checkStatus = [&] (const string &status,
-            const function<void()> &before = [] {},
-            const function<void()> &begin = [] {}) {
-        flag[status] = regex_match(line, *expression[status]);
-        if (!flag[status]) {
-            before();
-        } else {
-            begin();
-        }
-    };
-
     auto newChapter = [&] {
         chapter = new context::Chapter("zh-CN", *chapterTitle);
         chapter->nextSection = metadata.sectionNumberBegin;
@@ -162,67 +183,98 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
             expression["chapter"] = new regex(wrap(*chapterTitle));
     };
 
+    auto newColorIllustration = [&] {
+        colorChapter = new context::ColorIllustration("zh-CN", *colorImageName);
+        colorIllustrations.emplace_back(colorChapter);
+        if (colorImageName != illustrations.color.end())
+            ++colorImageName;
+        if (colorImageName != illustrations.color.end())
+            expression["illustration"] = new regex(imageWrap(*colorImageName));
+    };
+
+    statusProcess["start"] = new StatusProcess {
+        [] {}, [] {}
+    };
+
+    statusProcess["preface"] = new StatusProcess {
+            [&] {
+                preface = new context::Chapter("zh-CN",content.preface);
+            },
+            [&] {
+                appendParagraph(preface);
+            }
+    };
+
+    statusProcess["illustration"] = new StatusProcess {
+        [&] {
+            newColorIllustration();
+        },
+        [&] {
+            if (regex_match(line, *expression["illustration"])) {
+                newColorIllustration();
+            } else {
+                appendParagraph(colorChapter);
+            }
+        }
+    };
+
+    statusProcess["preface2"] = new StatusProcess {
+        [&] {
+            preface2 = new context::Chapter("zh-CN", content.preface2);
+            },
+            [&] {
+            appendParagraph(preface2);
+        }
+    };
+
+    statusProcess["chapter"] = new StatusProcess {
+        [&] {
+            newChapter();
+        },
+        [&] {
+            if (regex_match(line, *expression["chapter"])) {
+                newChapter();
+            } else if (regex_match(line, *expression["section"])) {
+                section = new context::Section();
+                section->title = line.back();
+                chapter->sections.emplace_back(section);
+                expression["section"] = new regex(wrap(to_string(++chapter->nextSection)));
+                sectionMode = true;
+            } else {
+                appendParagraph(sectionMode ? section : chapter);
+            }
+        }
+    };
+
+    statusProcess["afterword"] = new StatusProcess {
+        [&] {
+            afterword = new context::Chapter("zh-CN", content.afterword);
+        },
+        [&] {
+            appendParagraph(afterword);
+        }
+    };
+
+    auto setStatus = [&status_queue] (string &status) {
+        status = status_queue.front();
+        status_queue.pop();
+    };
+
+    string status;
+    setStatus(status);
     while (!text.eof()) {
 
         getline(text, line);
 
-        if (!flag["preface"]) {
-            checkStatus("preface", [] {}, [&] {
-                preface = new context::Chapter("zh-CN",content.preface);
-            });
-            continue;
+        if (!status_queue.empty() && regex_match(line, *expression[status_queue.front()])) {
+            setStatus(status);
+            statusProcess[status]->begin();
+        } else {
+            statusProcess[status]->process();
         }
-
-//        if (!flag["illustration"]) {
-//            flag["illustration"] = regex_match(line, *expression["illustration"]);
-//            if (!flag["illustration"]) {
-//
-//                appendParagraph(preface);
-//            }
-//            continue;
-//        }
-
-        if (!flag["preface2"]) {
-            checkStatus("preface2", [&] {
-                appendParagraph(preface);
-                }, [&] {
-                preface2 = new context::Chapter("zh-CN", content.preface2);
-            });
-            continue;
-        }
-
-        if (!flag["chapter"]) {
-            checkStatus("chapter", [&] {
-                appendParagraph(preface2);
-                }, [&] {
-                newChapter();
-            });
-            continue;
-        }
-
-        if (!flag["afterword"]) {
-            checkStatus("afterword", [&] {
-
-                if (regex_match(line, *expression["chapter"])) {
-                    newChapter();
-                } else if (regex_match(line, *expression["section"])) {
-                    section = new context::Section();
-                    section->title = line.back();
-                    chapter->sections.emplace_back(section);
-                    expression["section"] = new regex(wrap(to_string(++chapter->nextSection)));
-                    sectionMode = true;
-                } else {
-                    appendParagraph(sectionMode ? section : chapter);
-                }
-
-            }, [&] {
-                afterword = new context::Chapter("zh-CN", content.afterword);
-            });
-            continue;
-        }
-
-        appendParagraph(afterword);
     }
+
+
 
     if (showContent) {
         for (auto c: chapters) {
@@ -234,6 +286,11 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
 
     name = "preface.xhtml";
     preface->to_xml(outPutDir + name);
+
+    for (int i = 0; i < colorIllustrations.size(); ++i) {
+        name = "illustration" + to_string(i) + ".xhtml";
+        colorIllustrations[i]->to_xml(outPutDir + name);
+    }
 
     name = "preface2.xhtml";
     preface2->to_xml(outPutDir + name);
@@ -305,6 +362,22 @@ ostream &context::operator<<(ostream &out, Chapter &chapter) {
     return out;
 }
 
+context::Chapter::Chapter() = default;
+
+context::Chapter::Chapter(const context::Chapter &chapter)
+: Section(chapter), lang(chapter.lang), sections(chapter.sections) {}
+
+context::Chapter::Chapter(string lang, const string &title)
+: Section(title), lang(std::move(lang)), sections() {}
+
+context::ColorIllustration::ColorIllustration() = default;
+
+context::ColorIllustration::ColorIllustration(const ColorIllustration &illustration)
+: Section(illustration), lang(illustration.lang) {}
+
+context::ColorIllustration::ColorIllustration(const string &lang, const string &title)
+: Section(title), lang(lang) {}
+
 void context::Chapter::to_xml(const string &path) {
 
     doc.load_file((TemplateRoot + "chapter.xhtml").data());
@@ -328,10 +401,24 @@ void context::Chapter::to_xml(const string &path) {
     doc.save_file(path.data());
 }
 
-context::Chapter::Chapter() = default;
+void context::ColorIllustration::to_xml(const string &path) {
+    doc.load_file((TemplateRoot + "illustration.xhtml").data());
+    pugi::xml_node html = doc.child("html");
+    html.attribute("xml:lang") = lang.data();
+    html.attribute("lang") = lang.data();
+    html.child("head").child("title").text() = title.data();
 
-context::Chapter::Chapter(const context::Chapter &chapter)
-: Section(chapter), lang(chapter.lang), sections(chapter.sections) {}
+    auto figure = html.child("body").child("figure");
 
-context::Chapter::Chapter(string lang, const string &title)
-: Section(title), lang(std::move(lang)), sections() {}
+    auto img = figure.child("img");
+    img.attribute("src") = ("../Images/" + title).data();
+    img.attribute("alt") = title.data();
+
+    for (int i = min_index; i <= max_index; i++) {
+        if (paragraphs[i].empty())
+            figure.append_child("p").append_child("br");
+        else
+            figure.append_child("p").text() = paragraphs[i].data();
+    }
+    doc.save_file(path.data());
+}
