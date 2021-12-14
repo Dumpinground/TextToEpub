@@ -12,6 +12,18 @@
 
 using namespace std;
 
+void saveJson(const json &j, const string &name, const string& root) {
+    ofstream o(root + name);
+    o << setw(2) << j << endl;
+}
+
+json getJson(const string &name, const string& root) {
+    json j;
+    ifstream i(root + name);
+    i  >> j;
+    return j;
+}
+
 void Book::Create(const string &dir) {
     ifstream i("../template/template.json");
     ofstream o(dir + "/newBook.json");
@@ -45,6 +57,10 @@ string Book::eBookName() const {
     return "[" + contributor.author + "]." + metadata.title + " " + metadata.subtitle + "." + metadata.volume;
 }
 
+string Book::fullTitle() const {
+    return metadata.title + " " + metadata.subtitle + " " + metadata.volume;
+}
+
 //copy all files in the src_path
 void copyFiles(const string &src_path, const string &dist_path) {
     boost::filesystem::path path(src_path);
@@ -57,13 +73,29 @@ void copyFiles(const string &src_path, const string &dist_path) {
     }
 }
 
-void Book::CreateBuild(const string &path) {
+void Book::BuildInit(const string &path) {
+    CreateResourceDir(path);
+}
+
+void Book::CreateResourceDir(const string &path) {
+    ResourceRoot = path + "resources/";
+    boost::filesystem::create_directory(ResourceRoot);
+    boost::filesystem::create_directory(ImagesRoot());
+    boost::filesystem::create_directory(TextRoot());
+    boost::filesystem::create_directory(DataRoot());
+    saveJson(*this, "new book.json", DataRoot());
+}
+
+string Book::dir_path() {
+    return book_dir + dir_name + "/";
+}
+
+void Book::CreateBuildDir(const string &path) {
 
     book_dir = path;
     pugi::xml_document doc;
 
-    string dir_path = path + dir_name + "/";
-    mkDir(dir_path, [](const string &path) {
+    mkDir(dir_path(), [this](const string &path) {
 
         ofstream os(path + "mimetype");
         os << "application/epub+zip";
@@ -75,21 +107,23 @@ void Book::CreateBuild(const string &path) {
             doc.save_file((path + "container.xml").data());
         });
 
-        mkDir(path + "EPUB/", [](const string &path) {
+        mkDir(path + "EPUB/", [this](const string &path) {
 
             pugi::xml_document doc;
             doc.load_file((TemplateRoot + "package.opf").data());
             doc.save_file((path + "package.opf").data());
 
-            mkDir(path + "Styles/");
-            mkDir(path + "Images/", [](const string &path) {
-//                copyFiles(ImagesRoot, path);
+            mkDir(path + "Styles/",[](const string &path) {
+                boost::filesystem::copy_file("../test/origin/style.css", path + "style.css");
+            });
+            mkDir(path + "Images/", [this](const string &path) {
+                copyFiles(ImagesRoot(), path);
             });
         });
     });
 }
 
-void Book::PackBuild() {
+void Book::PackBook() {
     if (!book_dir.empty())
         boost::filesystem::rename(book_dir + dir_name, WS(book_dir + eBookName()));
 }
@@ -107,12 +141,6 @@ string Book::imageWrap(string wrapped) const {
 
 struct StatusProcess {
     function<void()> begin, process;
-
-//    StatusProcess()
-//    :begin([] {}), process([] {}) {}
-//
-//    StatusProcess(function<void()> begin, function<void()> process)
-//    :begin(std::move(begin)), process(std::move(process)) {}
 };
 
 void Book::extract(const string &inputTextPath, const string &outPutDir, bool showContent) {
@@ -125,7 +153,7 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
     whitespace = boost::join(metadata.whitespace, "") + "\\s";
 
     auto colorImageName = illustrations.color.begin();
-    auto chapterTitle = content.chapters.begin();
+    auto chapterTitle = contents.chapters.begin();
 
     context::Chapter *chapter;
     context::ColorIllustration *colorChapter;
@@ -145,11 +173,11 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
     status_queue.push("afterword");
 
     expression["start"] = new regex("^" + metadata.title);
-    expression["preface"] = new regex(wrap(content.preface));
+    expression["preface"] = new regex(wrap(contents.preface));
     expression["illustration"] = new regex(imageWrap(*colorImageName));
-    expression["preface2"] = new regex(wrap(content.preface2));
+    expression["preface2"] = new regex(wrap(contents.preface2));
     expression["chapter"] = new regex(wrap(*chapterTitle));
-    expression["afterword"] = new regex(wrap(content.afterword));
+    expression["afterword"] = new regex(wrap(contents.afterword));
 
     expression["separator"] = new regex(wrap(boost::join(metadata.separators, "|")));
     expression["space"] = new regex("^[" + whitespace + "]*");
@@ -171,20 +199,20 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
     bool sectionMode = false;
 
     auto newChapter = [&] {
-        chapter = new context::Chapter("zh-CN", *chapterTitle);
+        chapter = new context::Chapter(lang, *chapterTitle);
         chapter->nextSection = metadata.sectionNumberBegin;
         expression["section"] = new regex(wrap(to_string(chapter->nextSection)));
         chapters.emplace_back(chapter);
         sectionMode = false;
 
-        if (chapterTitle != content.chapters.end())
+        if (chapterTitle != contents.chapters.end())
             ++chapterTitle;
-        if (chapterTitle != content.chapters.end())
+        if (chapterTitle != contents.chapters.end())
             expression["chapter"] = new regex(wrap(*chapterTitle));
     };
 
     auto newColorIllustration = [&] {
-        colorChapter = new context::ColorIllustration("zh-CN", *colorImageName);
+        colorChapter = new context::ColorIllustration(lang, *colorImageName);
         colorIllustrations.emplace_back(colorChapter);
         if (colorImageName != illustrations.color.end())
             ++colorImageName;
@@ -198,7 +226,7 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
 
     statusProcess["preface"] = new StatusProcess {
             [&] {
-                preface = new context::Chapter("zh-CN",content.preface);
+                preface = new context::Chapter(lang, contents.preface);
             },
             [&] {
                 appendParagraph(preface);
@@ -220,7 +248,7 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
 
     statusProcess["preface2"] = new StatusProcess {
         [&] {
-            preface2 = new context::Chapter("zh-CN", content.preface2);
+            preface2 = new context::Chapter(lang, contents.preface2);
             },
             [&] {
             appendParagraph(preface2);
@@ -248,7 +276,7 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
 
     statusProcess["afterword"] = new StatusProcess {
         [&] {
-            afterword = new context::Chapter("zh-CN", content.afterword);
+            afterword = new context::Chapter(lang, contents.afterword);
         },
         [&] {
             appendParagraph(afterword);
@@ -283,6 +311,49 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
     }
 
     string name;
+    name = "cover.xhtml";
+    {
+        pugi::xml_document cover;
+        cover.load_file((TemplateRoot + name).data());
+        auto html = cover.child("html");
+        html.attribute("xml:lang") = lang.data();
+        html.attribute("lang") = lang.data();
+        auto img = html.child("body").child("figure").child("img");
+        img.attribute("src") = ("Images/" + metadata.cover).data();
+        img.attribute("alt") = metadata.cover.data();
+        cover.save_file((outPutDir + name).data());
+    }
+
+    name = "toc.xhtml";
+    {
+        pugi::xml_document toc;
+        toc.load_file((TemplateRoot + name).data());
+        auto html = toc.child("html");
+        html.attribute("xml:lang") = lang.data();
+        html.attribute("lang") = lang.data();
+        html.child("head").child("title").text() = fullTitle().data();
+
+        auto body = html.child("body");
+        body.child("h1").text() = fullTitle().data();
+        auto nav = body.child("nav");
+        nav.child("h2").text() = "Contents";
+
+        auto content_list = nav.child("ol");
+        auto listAdd = [] (pugi::xml_node &ol, const string &href, const string &title) {
+            auto a = ol.append_child("li").append_child("a");
+            a.append_attribute("href") = href.data();
+            a.text() = title.data();
+        };
+        listAdd(content_list, "preface.xhtml", contents.preface);
+        listAdd(content_list, "illustration0.html", "插图");
+        listAdd(content_list, "preface2.xhtml", contents.preface2);
+        for (int i = 0; i < contents.chapters.size(); i++) {
+            listAdd(content_list, "chapter" + to_string(i) + ".xhtml", contents.chapters[i]);
+        }
+        listAdd(content_list, "afterword.xhtml", contents.afterword);
+
+        toc.save_file((outPutDir + name).data());
+    }
 
     name = "preface.xhtml";
     preface->to_xml(outPutDir + name);
@@ -302,6 +373,77 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
 
     name = "afterword.xhtml";
     afterword->to_xml(outPutDir + name);
+
+    buildPackage(outPutDir);
+}
+
+void Book::buildPackage(const string &outPutDir) {
+    pugi::xml_document doc;
+    doc.load_file((TemplateRoot + "package.opf").data());
+
+    vector<string> chapterList = {"preface"};
+    for (int i = 0; i < illustrations.color.size(); ++i) {
+        chapterList.push_back("illustration" + to_string(i));
+    }
+    chapterList.emplace_back("preface2");
+    for (int i = 0; i < chapters.size(); ++i) {
+        chapterList.push_back("chapter" + to_string(i));
+    }
+    chapterList.emplace_back("afterword");
+
+    auto package = doc.child("package");
+    package.attribute("xml:lang") = lang.data();
+
+    auto metadata = package.child("metadata");
+    metadata.child("dc:identifier").append_attribute("opf:scheme") = "UUID";
+    metadata.child("dc:identifier").text() = ("urn:uuid:" + uuid4()).data();
+    metadata.child("dc:title").text() = fullTitle().data();
+    metadata.child("dc:language").text() = lang.data();
+    metadata.child("dc:creator").text() = contributor.author.data();
+
+    auto manifest = package.child("manifest");
+    auto spine = package.child("spine");
+
+    auto appendItem = [&] (const string& id, const string& href, const string& media_type)->pugi::xml_node {
+        auto item = manifest.append_child("item");
+        item.append_attribute("id") = id.data();
+        item.append_attribute("href") = href.data();
+        item.append_attribute("media-type") = media_type.data();
+        return item;
+    };
+
+    appendItem("cover-image", this->metadata.cover, "image/jpeg")
+    .append_attribute("properties") = "cover-image";
+    auto itemref = spine.append_child("itemref");
+    itemref.append_attribute("idref") = "cover";
+    itemref.append_attribute("linear") = "no";
+
+    for (const auto& c: chapterList) {
+        appendItem(c, c + ".xhtml", "application/xhtml+xml");
+        spine.append_child("itemref").append_attribute("idref") = c.data();
+    }
+
+    for (const auto& i : illustrations.color) {
+        appendItem(i, "Images/" + i, "image/jpeg");
+    }
+
+    for (const auto& i : illustrations.gray) {
+        appendItem(i, "Images/" + i, "image/jpeg");
+    }
+
+    doc.save_file((outPutDir + "package.opf").data());
+}
+
+string Book::ImagesRoot() {
+    return ResourceRoot + "images/";
+}
+
+string Book::TextRoot() {
+    return ResourceRoot + "text/";
+}
+
+string Book::DataRoot() {
+    return ResourceRoot + "data/";
 }
 
 context::Section::Section() = default;
@@ -328,7 +470,7 @@ pugi::xml_node context::Section::append(pugi::xml_node &node) const {
 
         // separators empty -> pass
         if (j < separators.size() && separators[j] == i) {
-            p.append_attribute("class") = "tiny title";
+            p.append_attribute("class") = "tiny-title";
             j++;
         }
     }

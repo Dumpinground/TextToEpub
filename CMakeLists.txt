@@ -57,12 +57,16 @@ add_subdirectory(boost-cmake)
 enable_testing()
 
 file(GLOB UTIL_SRC "util/*.h" "util/*.cpp")
+file(GLOB Test_SRC "test/*.h" "test/*.cpp")
+file(GLOB ThirdParty_SRC
+        "thirdparty/gpakosz_uuid4/uuid4.c"
+        "thirdparty/gpakosz_uuid4/uuid4.h")
 
 #test toggle
 set(TEST ON)
 
 if (TEST)
-    set(MAIN_SRC test/test.cpp)
+    set(MAIN_SRC ${Test_SRC})
     else()
     set(MAIN_SRC main.cpp)
 endif ()
@@ -70,6 +74,7 @@ endif ()
 add_executable(TextToEpub
         ${MAIN_SRC}
         ${UTIL_SRC}
+        ${ThirdParty_SRC}
         )
 
 include(GoogleTest json)

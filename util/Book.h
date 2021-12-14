@@ -14,6 +14,8 @@
 #include <regex>
 #include <boost/algorithm/string.hpp>
 
+#include "../util/uuid.h"
+
 using string = std::string;
 using json = nlohmann::json;
 
@@ -21,20 +23,17 @@ using json = nlohmann::json;
 #define VDUMP(x) std::cout << VLIST(x) << std::endl
 
 #define TemplateRoot string("../template/")
-#define ResourcesRoot string("../resources/")
-#define ImagesRoot (ResourcesRoot + "images/")
-#define TextRoot (ResourcesRoot + "text/")
 
 json newJson();
 
 namespace outline {
 
-    struct Content {
+    struct Contents {
         string preface, preface2;
         std::vector<string> chapters;
         string afterword;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Content, preface, preface2, chapters, afterword)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Contents, preface, preface2, chapters, afterword)
     };
 
     struct Illustrations {
@@ -52,7 +51,7 @@ namespace outline {
 
     struct Metadata {
         string title, subtitle, volume, cover, backCover;
-        int sectionNumberBegin;
+        int sectionNumberBegin = 0;
         std::vector<string> whitespace, separators, extra;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Metadata, title, subtitle, volume, cover, backCover, sectionNumberBegin, whitespace, separators, extra)
@@ -139,25 +138,35 @@ private:
 
 public:
     static void Create(const string &dir);
+    string dir_path();
 
     outline::Metadata metadata;
     outline::Contributor contributor;
-    outline::Content content;
+    outline::Contents contents;
     outline::Illustrations illustrations;
+    string ResourceRoot = "../resources/";
 
     Book();
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, content, illustrations)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, contents, illustrations, ResourceRoot)
 
+    string lang = "zh-CN";
     string eBookName() const;
+    string fullTitle() const;
+    string ImagesRoot();
+    string TextRoot();
+    string DataRoot();
 
-    void CreateBuild(const string &path);
-    void PackBuild();
+    void BuildInit(const string &path);
+    void CreateResourceDir(const string &path);
+    void CreateBuildDir(const string &path);
+    void PackBook();
 
     string wrap(string wrapped) const;
     string imageWrap(string wrapped) const;
 
     void extract(const string &inputTextPath, const string &outPutDir, bool showContent = false);
+    void buildPackage(const string &outPutDir);
 
     bool find(const string& text);
 
