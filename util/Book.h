@@ -163,7 +163,7 @@ public:
     void PackBook();
 
     string wrap(string wrapped) const;
-    string imageWrap(string wrapped) const;
+    static string imageWrap(string wrapped) ;
 
     void extract(const string &inputTextPath, const string &outPutDir, bool showContent = false);
     void buildPackage(const string &outPutDir);

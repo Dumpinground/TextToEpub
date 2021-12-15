@@ -133,7 +133,7 @@ string Book::wrap(string wrapped) const {
     return wrapped;
 }
 
-string Book::imageWrap(string wrapped) const {
+string Book::imageWrap(string wrapped) {
     boost::replace_last(wrapped, ".", "\\.");
     wrapped = "^\\[" + wrapped + "\\]$";
     return wrapped;
@@ -345,7 +345,7 @@ void Book::extract(const string &inputTextPath, const string &outPutDir, bool sh
             a.text() = title.data();
         };
         listAdd(content_list, "preface.xhtml", contents.preface);
-        listAdd(content_list, "illustration0.html", "插图");
+        listAdd(content_list, "illustration0.xhtml", "插图");
         listAdd(content_list, "preface2.xhtml", contents.preface2);
         for (int i = 0; i < contents.chapters.size(); i++) {
             listAdd(content_list, "chapter" + to_string(i) + ".xhtml", contents.chapters[i]);
@@ -381,7 +381,7 @@ void Book::buildPackage(const string &outPutDir) {
     pugi::xml_document doc;
     doc.load_file((TemplateRoot + "package.opf").data());
 
-    vector<string> chapterList = {"preface"};
+    vector<string> chapterList = {"cover", "preface"};
     for (int i = 0; i < illustrations.color.size(); ++i) {
         chapterList.push_back("illustration" + to_string(i));
     }
@@ -395,7 +395,6 @@ void Book::buildPackage(const string &outPutDir) {
     package.attribute("xml:lang") = lang.data();
 
     auto metadata = package.child("metadata");
-    metadata.child("dc:identifier").append_attribute("opf:scheme") = "UUID";
     metadata.child("dc:identifier").text() = ("urn:uuid:" + uuid4()).data();
     metadata.child("dc:title").text() = fullTitle().data();
     metadata.child("dc:language").text() = lang.data();
@@ -412,7 +411,7 @@ void Book::buildPackage(const string &outPutDir) {
         return item;
     };
 
-    appendItem("cover-image", this->metadata.cover, "image/jpeg")
+    appendItem("cover-image", "Images/" + this->metadata.cover, "image/jpeg")
     .append_attribute("properties") = "cover-image";
     auto itemref = spine.append_child("itemref");
     itemref.append_attribute("idref") = "cover";
