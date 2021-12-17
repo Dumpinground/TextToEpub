@@ -56,11 +56,19 @@ add_subdirectory(boost-cmake)
 
 enable_testing()
 
-file(GLOB UTIL_SRC "util/*.h" "util/*.cpp")
-file(GLOB Test_SRC "test/*.h" "test/*.cpp")
-file(GLOB ThirdParty_SRC
-        "thirdparty/gpakosz_uuid4/uuid4.c"
-        "thirdparty/gpakosz_uuid4/uuid4.h")
+set(UTIL_SRC
+        util/util.h
+        util/Book.h util/Book.cpp
+        util/Context.h util/Context.cpp
+        util/uuid.h util/uuid.cpp
+        util/outline.h)
+set(Test_SRC
+        test/test.h
+        test/test.cpp
+        test/book.cpp)
+set(ThirdParty_SRC
+        thirdparty/gpakosz_uuid4/uuid4.c
+        thirdparty/gpakosz_uuid4/uuid4.h)
 
 #test toggle
 set(TEST ON)

@@ -212,30 +212,3 @@ TEST(testChapter, testLoad) {
 
     cout << result << endl;
 }
-
-TEST(testIllustration, testWrap) {
-    Book book = getJson("missing 2.json").get<Book>();
-    cout << book.imageWrap(book.illustrations.color[0]) << endl;
-}
-
-TEST(testBook, testExtractChapter) {
-    Book book = getJson("missing 2.json").get<Book>();
-    book.extract(book.TextRoot() + "missing 2.txt", OutPutRoot + "text/", false);
-    book.buildPackage(OutPutRoot + "text/");
-}
-
-TEST(testBook, testUuid) {
-    cout << uuid4() << endl;
-}
-
-TEST(testBook, testBuild) {
-    Book book;
-    book.BuildInit(OutPutRoot);
-}
-
-TEST(testBook, testBuildPack) {
-    Book book = getJson("missing 2.json", "../test/result/resources/data/").get<Book>();
-    book.CreateBuildDir(OutPutRoot);
-    book.extract(book.TextRoot() + "missing 2.txt", book.dir_path() + "EPUB/");
-    book.PackBook();
-}
