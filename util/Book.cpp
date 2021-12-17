@@ -207,7 +207,7 @@ void Book::extract2(const string &inputTextPath, const string &outPutDir) {
                     section = new context::Section();
                     section->title = line.back();
                     chapter->sections.emplace_back(section);
-                    expression["section"] = new regex(wrap(to_string(++chapter->nextSection)));
+                    expression["section"] = new regex(wrap(to_string(++chapter->nextSection), true));
                     chapter->type = context::within_sections;
                 } else switch (chapter->type) {
                     case context::within_sections:
