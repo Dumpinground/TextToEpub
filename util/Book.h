@@ -45,10 +45,8 @@ public:
 
     string wrap(string wrapped, bool blank = false) const;
 
-    void extract2(const string &inputTextPath, const string &outPutDir);
-    void extract(const string &inputTextPath, const string &outPutDir, bool showContent = false);
+    void extract(const string &inputTextPath, const string &outPutDir);
     void buildPackage(const string &outPutDir);
-    void buildPackage2(const string &outPutDir);
     void buildToc(const string &outPutDir);
     void annotate();
 

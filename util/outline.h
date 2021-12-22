@@ -10,11 +10,10 @@
 namespace outline {
 
     struct Contents {
-        string preface, preface2;
+        string preface;
         std::vector<string> chapters;
-        string afterword;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Contents, preface, preface2, chapters, afterword)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Contents, preface, chapters)
     };
 
     struct Illustrations {

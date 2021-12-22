@@ -23,14 +23,22 @@ namespace context {
         string mark() const;
     };
 
+    struct NotePair {
+        Annotation note;
+        int word;
+        int line;
+    };
+
     struct Section {
 
         string title;
         std::vector<int> separators;
         std::vector<string> paragraphs;
+
         int min_index = -1;
         unsigned long long max_index = 0;
-        int note_index = -1;
+
+        std::queue<NotePair> note_pairs;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Section, title, separators, paragraphs)
 
