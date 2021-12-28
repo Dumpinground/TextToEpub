@@ -93,6 +93,10 @@ void Book::CreateBuildDir(const string &path) {
     book_dir = path;
     pugi::xml_document doc;
 
+    if (boost::filesystem::exists(dir_path())) {
+        boost::filesystem::remove_all(dir_path());
+    }
+
     mkDir(dir_path(), [this](const string &path) {
 
         ofstream os(path + "mimetype");
@@ -126,7 +130,6 @@ void Book::PackBook() {
         wstring new_dir = WS(book_dir + eBookName());
         if (boost::filesystem::exists(new_dir)) {
             boost::filesystem::remove_all(new_dir);
-            boost::filesystem::remove(new_dir);
         }
         boost::filesystem::rename(book_dir + dir_name, new_dir);
     }
@@ -175,15 +178,43 @@ void Book::extract(const string &inputTextPath, const string &outPutDir) {
         status_queue.pop();
     };
 
-    auto appendParagraph = [&expression, &line] (context::Section *section) {
-        if (regex_match(line, *expression["separator"])) {
-            int index = section->paragraphs.size();
-            section->separators.emplace_back(index);
-            line = regex_replace(line, *expression["space"], "");
+    context::Annotation note = metadata.note;
+
+    map<string, string> key;
+    map<string, function<void()>> update;
+
+    auto note_record = [&] (context::Section *section, string &line) {
+        unsigned long long pos = string::npos;
+
+        int index = (int)section->paragraphs.size();
+
+        if (!notes.empty() && line.find(notes.front().mark(context::Annotation::title_only)) != string::npos) {
+            int i = notes.front().number;
+            section->note_pairs[i].line = index;
+            notes.pop();
+            return;
         }
+
+        while (pos = line.find(note.mark(), pos + 1), pos != string::npos) {
+            notes.push(note);
+            section->note_pairs[note.number] = {note, index};
+            note.number++;
+        }
+
+    };
+
+    auto appendParagraph = [&expression, &line, &note_record] (context::Section *section) {
 
         if (!line.empty()) {
             section->setInterval();
+
+            if (regex_match(line, *expression["separator"])) {
+                int index = section->paragraphs.size();
+                section->separators.emplace_back(index);
+                line = regex_replace(line, *expression["space"], "");
+            }
+
+            note_record(section, line);
         }
 
         section->paragraphs.emplace_back(line);

@@ -57,7 +57,7 @@ add_subdirectory(boost-cmake)
 enable_testing()
 
 set(UTIL_SRC
-        util/util.h
+        util/util.h util/util.cpp
         util/Book.h util/Book.cpp
         util/Context.h util/Context.cpp
         util/uuid.h util/uuid.cpp

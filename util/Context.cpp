@@ -19,6 +19,9 @@ pugi::xml_node context::Section::append_to(pugi::xml_node &node) {
     section.append_child("h4").append_attribute("class") = "title";
     section.child("h4").text() = title.data();
 
+    map<string, int> note_index;
+    auto notePair = note_pairs.begin();
+
     for (int i = min_index, j = 0; i <= max_index; ++i) {
 
         auto p = section.append_child("p");
@@ -35,6 +38,54 @@ pugi::xml_node context::Section::append_to(pugi::xml_node &node) {
             p.append_child("br");
         }
 
+        if (notePair == note_pairs.end()) {
+
+        } else if (i == notePair->second.word) {
+
+            vector<int> numbers;
+            vector<string> brackets;
+
+            do {
+                numbers.push_back(notePair->second.note.number);
+
+                if (++notePair == note_pairs.end()) {
+                    notePair = note_pairs.begin();
+                    break;
+                }
+
+            } while (i == notePair->second.word);
+
+            for (auto n: numbers) {
+                brackets.insert(brackets.end(), notePair->second.note.brackets.begin(), notePair->second.note.brackets.end());
+            }
+
+            vector<string> texts = split(paragraphs[i], brackets);
+
+            for (int k = 0; k < texts.size(); ++k) {
+                if (k % 2) {
+                    int number = numbers[(k - 1) / 2];
+                    auto a = p.append_child("a");
+                    a.append_attribute("epub:type") = "noteref";
+                    a.append_attribute("href") = ("#n" + to_string(number)).data();
+                    a.text() = number;
+                } else {
+                    p.append_child(pugi::node_pcdata).text() = texts[k].data();
+                }
+            }
+
+            continue;
+
+        } else if (i == notePair->second.line) {
+
+            p.set_name("aside");
+            auto aside = p;
+            aside.text() = paragraphs[i].data();
+            aside.append_attribute("epub:type") = "footnote";
+            aside.append_attribute("id") = ("n" + to_string(notePair->second.note.number) ).data();
+            notePair++;
+            continue;
+        }
+
         p.text() = paragraphs[i].data();
 
         // separators empty -> pass
@@ -43,6 +94,7 @@ pugi::xml_node context::Section::append_to(pugi::xml_node &node) {
             j++;
         }
     }
+
     return section;
 }
 
@@ -165,6 +217,18 @@ void context::ColorIllustration::to_xml(const string &path) {
     doc.save_file(path.data());
 }
 
-string context::Annotation::mark() const {
-    return symbol + to_string(number);
+string context::Annotation::mark(FormatType type) const {
+
+    string n = to_string(number);
+    string result;
+    switch (type) {
+        case symbol_title:
+            result += symbol;
+        case title_only:
+            result += title + n;
+            break;
+        case brackets_wrapped:
+            result = brackets[0] + symbol + title + n + brackets[1];
+    }
+    return result;
 }

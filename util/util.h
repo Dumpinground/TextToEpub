@@ -26,4 +26,6 @@ using json = nlohmann::json;
 #define VNAME(x) #x
 #define VDUMP(x) std::cout << VLIST(x) << std::endl
 
+std::vector<string> split(const string& text, const std::vector<string>& separators);
+
 #endif //TEXTTOEPUB_UTIL_H

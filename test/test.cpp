@@ -36,7 +36,7 @@ TEST(test, testJson) {
     saveJson(j2, "j2");
 }
 
-TEST(test, testXML) {
+TEST(testXML, testDoc) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file((TemplateRoot + "container.xml").data());
     cout << "Load result: " << result.description() << endl
@@ -44,11 +44,38 @@ TEST(test, testXML) {
     doc.save_file((TemplateRoot + "new container.xml").data());
 }
 
-TEST(test, testXHTML) {
+TEST(testXML, testXHTML) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file((AccessibleEpub3Root + "EPUB/ch01.xhtml").data());
     cout << "Load result: " << result.description() << endl;
     doc.save_file((TemplateRoot + "chapter.xhtml").data());
+}
+
+TEST(testXML, testPcnode) {
+    pugi::xml_document doc;
+    doc.load_file((TemplateRoot + "chapter.xhtml").data());
+    auto body = doc.child("html").child("body");
+    auto p = body.append_child("p");
+
+    string text = "我看值得（注1）下";
+    string text2 = "I see something (note) done";
+
+    vector<string> ss = split(text, {"（", "）"});
+
+    p.append_child(pugi::node_pcdata).text() = ss[0].data();
+    p.append_child("a").text() = ss[1].data();
+    p.append_child(pugi::node_pcdata).text() = ss[2].data();
+
+    doc.save_file((OutPutRoot + "note.xhtml").data());
+}
+
+TEST(testBoost, testSplit) {
+    std::vector<string> ss;
+    string text = "我看值得（注1）下（注2）上（注3）后";
+    ss = split(text, {"（", "）", "（", "）", "（", "）"});
+    for (const auto& s: ss) {
+        cout << s << endl;
+    }
 }
 
 TEST(test, testOpf) {

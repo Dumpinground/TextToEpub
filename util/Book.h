@@ -54,10 +54,7 @@ public:
 
 private:
     string whitespace;
-
-    std::map<string, context::Chapter*> extraChapter;
     std::vector<context::Chapter *> chapters;
-    std::vector<context::ColorIllustration *> colorIllustrations;
     std::queue<context::Annotation> notes;
 };
 

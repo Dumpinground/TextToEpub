@@ -16,11 +16,17 @@ namespace context {
 
     struct Annotation {
         string symbol;
+        string title;
         int number;
+        std::vector<string> brackets;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Annotation, symbol, number)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Annotation, symbol, title, number, brackets)
 
-        string mark() const;
+        enum FormatType {
+            title_only, symbol_title, brackets_wrapped
+        };
+
+        string mark(FormatType type = symbol_title) const;
     };
 
     struct NotePair {
@@ -38,7 +44,7 @@ namespace context {
         int min_index = -1;
         unsigned long long max_index = 0;
 
-        std::queue<NotePair> note_pairs;
+        std::map<int, NotePair> note_pairs;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Section, title, separators, paragraphs)
 
