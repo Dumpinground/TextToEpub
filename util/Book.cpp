@@ -15,10 +15,22 @@ void saveJson(const json &j, const string &name, const string& root) {
     o << setw(2) << j << endl;
 }
 
+void Book::saveJson(const json &j, const string &name, const string &root) {
+    ofstream o(root + name);
+    o << setw(2) << j << endl;
+}
+
 json getJson(const string &name, const string& root) {
     json j;
     ifstream i(root + name);
-    i  >> j;
+    i >> j;
+    return j;
+}
+
+json Book::getJson(const string &name, const string &root) {
+    json j;
+    ifstream i(root + name);
+    i >> j;
     return j;
 }
 
@@ -65,9 +77,6 @@ void copyFiles(const string &src_path, const string &dist_path) {
     boost::filesystem::directory_iterator dir_end;
     for (boost::filesystem::directory_iterator dir_it(path); dir_it != dir_end; ++dir_it) {
         boost::filesystem::copy(dir_it->path(), WS(dist_path + dir_it->path().filename().string()) );
-//        ifstream i(dir_it->path().string(), ios_base::binary);
-//        ofstream o(dist_path + dir_it->path().filename().string(), ios_base::binary);
-//        o << i.rdbuf();
     }
 }
 
@@ -409,40 +418,4 @@ string Book::TextRoot() {
 
 string Book::DataRoot() {
     return ResourceRoot + "data/";
-}
-
-void Book::annotate() {
-    context::Annotation note = metadata.note;
-    map<string, string> key;
-    map<string, function<void()>> update;
-    update["word"] = [&] {
-        note.number++;
-        key["word"] = "（" + note.mark() + "）";
-    };
-    update["line"] = [&] {
-        if (!notes.empty())
-            key["line"] = notes.front().mark();
-    };
-
-    auto note_record = [&] (string &line) {
-        unsigned long long pos = string::npos;
-        while (pos = line.find(key["word"], pos + 1), pos != string::npos) {
-            notes.push(note);
-            line.replace(pos, key["word"].length(), R"(<a epub:type="noteref" href="#n)" + to_string(note.number) + R"(">)" + note.mark() + R"(</a>)");
-            update["word"]();
-        }
-    };
-
-    update["word"]();
-
-    for (auto chapter: chapters) {
-        for (auto &p: chapter->paragraphs) {
-            note_record(p);
-        }
-        for (auto section: chapter->sections) {
-            for (auto &p: section->paragraphs) {
-                note_record(p);
-            }
-        }
-    }
 }

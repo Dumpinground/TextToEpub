@@ -48,9 +48,11 @@ public:
     void extract(const string &inputTextPath, const string &outPutDir);
     void buildPackage(const string &outPutDir);
     void buildToc(const string &outPutDir);
-    void annotate();
 
     friend std::ostream &operator<<(std::ostream &out, Book &book);
+
+    static void saveJson(const json &j, const string &name, const string& root);
+    static json getJson(const string &name, const string& root);
 
 private:
     string whitespace;

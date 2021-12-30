@@ -4,18 +4,6 @@
 
 #include "test.h"
 
-//void saveJson(const json &j, const string &name, const string& root) {
-//    ofstream o(root + name);
-//    o << setw(2) << j << endl;
-//}
-//
-//json getJson(const string &name, const string& root) {
-//    json j;
-//    ifstream i(root + name);
-//    i  >> j;
-//    return j;
-//}
-
 TEST(test, testJson) {
     cout << "test" << endl;
     json j2 = {
@@ -69,7 +57,7 @@ TEST(testXML, testPcnode) {
     doc.save_file((OutPutRoot + "note.xhtml").data());
 }
 
-TEST(testBoost, testSplit) {
+TEST(test, testSplit) {
     std::vector<string> ss;
     string text = "我看值得（注1）下（注2）上（注3）后";
     ss = split(text, {"（", "）", "（", "）", "（", "）"});

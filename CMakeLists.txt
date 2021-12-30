@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(TextToEpub)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 include(FetchContent)
 
@@ -61,7 +61,7 @@ set(UTIL_SRC
         util/Book.h util/Book.cpp
         util/Context.h util/Context.cpp
         util/uuid.h util/uuid.cpp
-        util/outline.h)
+        util/outline.h argument/argument.h argument/argument.cpp)
 set(Test_SRC
         test/test.h
         test/test.cpp
@@ -71,7 +71,7 @@ set(ThirdParty_SRC
         thirdparty/gpakosz_uuid4/uuid4.h)
 
 #test toggle
-set(TEST ON)
+set(TEST OFF)
 
 if (TEST)
     set(MAIN_SRC ${Test_SRC})
