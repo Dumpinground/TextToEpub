@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <boost/filesystem.hpp>
 #include <codecvt>
+#include <utility>
 
 using namespace std;
 
@@ -125,7 +126,7 @@ void Book::CreateBuildDir(const string &path) {
             doc.save_file((path + "package.opf").data());
 
             mkDir(path + "Styles/",[](const string &path) {
-                boost::filesystem::copy_file("../test/origin/style.css", path + "style.css");
+                boost::filesystem::copy_file(TemplateRoot + "Styles/style.css", path + "style.css");
             });
             mkDir(path + "Images/", [this](const string &path) {
                 copyFiles(ImagesRoot(), path);
@@ -406,6 +407,44 @@ void Book::buildToc(const string &outPutDir) {
 
     toc.save_file((outPutDir + name).data());
 
+}
+
+void Book::addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin) {
+    std::filesystem::directory_entry entry(path);
+    map<string, vector<string> *> illustration;
+    map<string, string> beginTag;
+
+    queue<string> status;
+    status.push("start");
+    status.push("color");
+    status.push("gray");
+
+    illustration["color"] = &illustrations.color;
+    illustration["gray"] = &illustrations.gray;
+
+    beginTag["color"] = std::move(colorBegin);
+    beginTag["gray"] = std::move(grayBegin);
+
+    auto setStatus = [&status] (string &s) {
+        s = status.front();
+        status.pop();
+    };
+
+    string type;
+    setStatus(type);
+
+    if (entry.is_directory()) {
+        std::filesystem::directory_iterator list(path);
+
+        for (const auto &image: list) {
+            if (!status.empty() && image.path().filename() == beginTag[status.front()]) {
+                setStatus(type);
+            }
+
+            if (type != "start")
+                illustration[type]->push_back(image.path().filename().string());
+        }
+    }
 }
 
 string Book::ImagesRoot() {

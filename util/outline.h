@@ -17,7 +17,8 @@ namespace outline {
     };
 
     struct Illustrations {
-        std::vector<string> color, gray;
+        std::vector<string> gray;
+        std::vector<string> color;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Illustrations, color, gray)
     };

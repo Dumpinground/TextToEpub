@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" version="3.0" xml:lang="en" unique-identifier="pub-identifier">
+	<metadata>
+		<dc:identifier id="pub-identifier">urn:isbn:9781449328030</dc:identifier>
+		<dc:title id="pub-title">Accessible EPUB 3</dc:title>
+		<dc:language id="pub-language">en</dc:language>
+		<dc:creator id="pub-creator">Matt Garrish</dc:creator>
+	</metadata>
+	<manifest>
+		<item id="htmltoc" properties="nav" media-type="application/xhtml+xml" href="toc.xhtml"/>
+		<item media-type="text/css" id="epub-css" href="Styles/style.css"/>
+	</manifest>
+	<spine>
+	</spine>
+</package>

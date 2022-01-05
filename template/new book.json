@@ -1,0 +1,57 @@
+{
+    "ResourceRoot": "../test/result/resources/",
+    "metadata": {
+        "title": "Missing",
+        "subtitle": "诅咒物语",
+        "volume": "Ⅱ",
+        "cover": "miss2_000a.jpg",
+        "backCover": "miss2_000b.jpg",
+        "sectionNumberBegin": 1,
+        "whitespace": ["　"],
+        "separators": ["＊"],
+        "note": {
+            "number": 0,
+            "symbol": "※注"
+        },
+        "extra": []
+    },
+    "contributor": {
+        "author": "甲田学人",
+        "illustrator": "翠川森",
+        "others": ["荻漥裕司", "肥猫", "恵飛須沢胡桃", "林卡"]
+    },
+    "contents": {
+        "preface": "简介",
+        "preface2": "摘录",
+        "chapters": [
+            "序章 故事的开端由魔女宣告",
+            "一章 黑魔法之夜",
+            "二章 无形物之夜",
+            "三章 倾轧之夜",
+            "四章 魔法书之夜",
+            "五章 魔王与魔王之夜",
+            "终章 而魔女没有道出故事的结局"
+        ],
+        "afterword": "后记"
+    },
+    "illustrations": {
+        "color": [
+            "miss2_001.jpg",
+            "miss2_002.jpg",
+            "miss2_003.jpg",
+            "miss2_004.jpg",
+            "miss2_005.jpg",
+            "miss2_006.jpg",
+            "miss2_007.jpg",
+            "miss2_008.jpg"
+        ],
+        "gray": [
+            "miss2_023.jpg",
+            "miss2_127.jpg",
+            "miss2_185.jpg",
+            "miss2_249.jpg",
+            "miss2_330.jpg",
+            "miss2_344.jpg"
+        ]
+    }
+}

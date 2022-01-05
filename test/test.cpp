@@ -227,3 +227,16 @@ TEST(testChapter, testLoad) {
 
     cout << result << endl;
 }
+
+TEST(testFilesystem, testFileListSort) {
+    std::filesystem::path path(MissingRoot + "3/images");
+    std::filesystem::directory_entry entry(path);
+
+    if (entry.is_directory()) {
+        std::filesystem::directory_iterator list(path);
+
+        for (const auto &image: list) {
+            cout << image.path().filename() << endl;
+        }
+    }
+}

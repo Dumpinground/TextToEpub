@@ -30,3 +30,30 @@ TEST(testBook, testBuildPack) {
     book.extract(book.TextRoot() + "missing 2.txt", book.dir_path() + "EPUB/");
     book.PackBook();
 }
+
+TEST(testBook, testRoot) {
+    Book book;
+    book.BuildInit(OutPutRoot + "playground/");
+
+    auto print = [] (const vector<string>& roots) {
+        for (const auto& root: roots) {
+            cout << root << endl;
+        }
+    };
+
+    print({
+        book.ResourceRoot,
+        book.ImagesRoot(),
+        book.TextRoot(),
+        book.DataRoot()
+    });
+}
+
+TEST(testBook, testImageAdd) {
+
+    Book book = getJson("new book.json", OutPutRoot + "playground/resources/data/");
+
+    book.addIllustrations(MissingRoot + "3/images", "miss3_001.png", "miss3_024025.png");
+
+    saveJson(book, "new book.json", OutPutRoot + "playground/resources/data/");
+}

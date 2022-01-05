@@ -48,6 +48,7 @@ public:
     void extract(const string &inputTextPath, const string &outPutDir);
     void buildPackage(const string &outPutDir);
     void buildToc(const string &outPutDir);
+    void addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin);
 
     friend std::ostream &operator<<(std::ostream &out, Book &book);
 

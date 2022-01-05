@@ -20,24 +20,42 @@ int main(int argc, char **argv) {
         case 3:
             if (string(argv[1]) == "--new_resource") {
                 book.BuildInit(argv[2]);
+                break;
             }
             break;
 
-        case 4:
-            // argv: 1: resourceDir 2: book_name 3: outputDir
-            book = Book::getJson(string(argv[2]) + ".json", string(argv[1]) + "/").get<Book>();
-            book.CreateBuildDir(argv[3]);
-            book.extract(book.TextRoot() + string(argv[2]) + ".txt", book.dir_path() + "EPUB/");
-            book.PackBook();
+        case 5:
+            if (string(argv[1]) == "pack") {
+                // argv: 2: resourceDir 3: book_name 4: outputDir
+                book = Book::getJson(string(argv[3]) + ".json", string(argv[2]) + "data/").get<Book>();
+                book.CreateBuildDir(argv[4]);
+                book.extract(book.TextRoot() + string(argv[3]) + ".txt", book.dir_path() + "EPUB/");
+                book.PackBook();
+                cout << "pack book succeeded" << endl;
+            }
+            break;
+
+        case 7:
+            if (string(argv[1]) == "add") {
+                if (string(argv[4]) == "--image") {
+                    book = Book::getJson(string(argv[3]) + ".json", string(argv[2]) + "data/").get<Book>();
+                    cout << "adding images from " << book.ImagesRoot() << endl;
+                    book.addIllustrations(book.ImagesRoot(), argv[5], argv[6]);
+                    Book::saveJson(book, string(argv[3]) + ".json", string(argv[2]) + "data/");
+                    cout << "add image succeeded" << endl;
+                }
+            }
             break;
 
         default:
             cout << R"(
 --help show this
 
---new_resource [dir] create a resource folder
+--new_resource [dir]  create a resource folder
 
-[resource] [name] [output]  output EPub dir from name.txt and name.json in resource;
+add [resource] [name] --image [color] [gray]  add images to color and gray automatically.
+
+pack [resource] [name] [output]  output EPub dir from name.txt and name.json in resource.
 )" << endl;
 
     }
