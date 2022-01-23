@@ -18,3 +18,36 @@ std::vector<string> split(const string& text, const std::vector<string>& separat
     result.push_back(text.substr(right + separators[i].length(), text.length()));
     return result;
 }
+
+string mediaType(const string& file) {
+    auto pos = file.find_last_of('.');
+    if (pos == string::npos) {
+        return "";
+    }
+    string extension = file.substr(pos + 1, file.length() - pos - 1);
+    string media = "image/";
+    if (extension == "jpg")
+        media += "jpeg";
+    else
+        media += extension;
+    return media;
+}
+
+bool ImageFileText::init() {
+    auto pos = file.find_last_of('.');
+    if (pos == string::npos) {
+        return false;
+    }
+    name = file.substr(0, pos);
+    extension = file.substr(pos + 1, file.length() - pos - 1);
+    return true;
+}
+
+string ImageFileText::mediaType() const {
+    string media = "image/";
+    if (extension == "jpg")
+        media += "jpeg";
+    else
+        media += extension;
+    return media;
+}

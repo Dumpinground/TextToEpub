@@ -133,14 +133,6 @@ context::Chapter::Chapter(const context::Chapter &chapter)
 context::Chapter::Chapter(string lang, const string &title)
         : Section(title), lang(std::move(lang)), sections() {}
 
-context::ColorIllustration::ColorIllustration() = default;
-
-context::ColorIllustration::ColorIllustration(const ColorIllustration &illustration)
-        : Section(illustration), lang(illustration.lang) {}
-
-context::ColorIllustration::ColorIllustration(const string &lang, const string &title)
-        : Section(title), lang(lang) {}
-
 void context::Chapter::to_xml(const string &path) {
 
     map<string, pugi::xml_node> node;
@@ -192,28 +184,6 @@ void context::Chapter::to_xml(const string &path) {
         }
     }
 
-    doc.save_file(path.data());
-}
-
-void context::ColorIllustration::to_xml(const string &path) {
-    doc.load_file((TemplateRoot + "illustration.xhtml").data());
-    pugi::xml_node html = doc.child("html");
-    html.attribute("xml:lang") = lang.data();
-    html.attribute("lang") = lang.data();
-    html.child("head").child("title").text() = title.data();
-
-    auto figure = html.child("body").child("figure");
-
-    auto img = figure.child("img");
-    img.attribute("src") = ("../Images/" + title).data();
-    img.attribute("alt") = title.data();
-
-    for (int i = min_index; i <= max_index; i++) {
-        if (paragraphs[i].empty())
-            figure.append_child("p").append_child("br");
-        else
-            figure.append_child("p").text() = paragraphs[i].data();
-    }
     doc.save_file(path.data());
 }
 

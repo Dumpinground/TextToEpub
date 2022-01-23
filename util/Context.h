@@ -85,19 +85,6 @@ namespace context {
     };
 
     std::ostream &operator<<(std::ostream &out, Chapter &chapter);
-
-    struct ColorIllustration : public Section {
-        string lang;
-
-        ColorIllustration();
-        ColorIllustration(const ColorIllustration &illustration);
-        ColorIllustration(const string &lang, const string &title);
-
-        void to_xml(const string &path);
-
-    private:
-        pugi::xml_document doc;
-    };
 }
 
 #endif //TEXTTOEPUB_CONTEXT_H

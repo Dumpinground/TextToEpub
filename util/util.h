@@ -28,4 +28,13 @@ using json = nlohmann::json;
 
 std::vector<string> split(const string& text, const std::vector<string>& separators);
 
+struct ImageFileText {
+    string file, name, extension;
+
+    bool init();
+    string mediaType() const;
+};
+
+string mediaType(const string& file);
+
 #endif //TEXTTOEPUB_UTIL_H

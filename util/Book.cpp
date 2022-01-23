@@ -341,7 +341,7 @@ void Book::buildPackage(const string &outPutDir) {
 
     if (!this->metadata.cover.empty()) {
 
-        appendItem("cover-image", "Images/" + this->metadata.cover, "image/jpeg")
+        appendItem("cover-image", "Images/" + this->metadata.cover, mediaType(this->metadata.cover))
                 .append_attribute("properties") = "cover-image";
 
         appendItem("cover", "cover.xhtml", "application/xhtml+xml");
@@ -359,11 +359,11 @@ void Book::buildPackage(const string &outPutDir) {
     }
 
     for (const auto& i : illustrations.color) {
-        appendItem(i, "Images/" + i, "image/jpeg");
+        appendItem(i, "Images/" + i, mediaType(i));
     }
 
     for (const auto& i : illustrations.gray) {
-        appendItem(i, "Images/" + i, "image/jpeg");
+        appendItem(i, "Images/" + i, mediaType(i));
     }
 
     doc.save_file((outPutDir + "package.opf").data());
