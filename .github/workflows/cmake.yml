@@ -20,8 +20,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Check Submodule
-      run: ls -l -r ${{runner.workspace}}/boost-cmake
+    - name: Clean Submodule
+      run: rm ${{github.workspace}}/boost-cmake
+      
+    - name: Fetch Submodule
+      run: git submodule add https://github.com/Orphis/boost-cmake.git
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
