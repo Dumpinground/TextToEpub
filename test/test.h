@@ -5,7 +5,7 @@
 #ifndef TEXTTOEPUB_TEST_H
 #define TEXTTOEPUB_TEST_H
 
-#include "../util/Book.h"
+#include "../src/util/Book.h"
 
 #include <gtest/gtest.h>
 

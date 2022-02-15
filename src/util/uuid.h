@@ -6,7 +6,7 @@
 #define TEXTTOEPUB_UUID_H
 
 #include <string>
-#include "../thirdparty/gpakosz_uuid4/uuid4.h"
+#include "../../thirdparty/gpakosz_uuid4/uuid4.h"
 
 std::string uuid4();
 
