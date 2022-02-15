@@ -24,7 +24,7 @@ jobs:
       run: rm -r ${{github.workspace}}/boost-cmake
       
     - name: Fetch Submodule
-      run: git submodule add https://github.com/Orphis/boost-cmake.git
+      run: cd ${{github.workspace}} && git submodule add https://github.com/Orphis/boost-cmake.git
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
