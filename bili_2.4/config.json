@@ -1,0 +1,49 @@
+{
+  "cookie": "_uuid=59E8D766-F3A7-7FCA-A5AE-C1610A74105ABD06422infoc; buvid3=3EF86415-F68C-4228-A9E7-93EAF287280B167641infoc; b_nut=1639410506; LIVE_BUVID=AUTO2616394105259477; rpdid=|(J~|J|Y|Jl|0J'uYJmR~)))J; blackside_state=1; SESSDATA=4fc6fe45%2C1656916784%2C4e397%2A11; bili_jct=f78d1e2e89adb94cb30e644793059c4e; DedeUserID=20241550; DedeUserID__ckMd5=8be92b6bce23aa13; sid=hsjpdx8b; i-wanna-go-back=-1; b_ut=5; fingerprint3=b2d3836ad4fe0c352b7b8e14704b5e35; fingerprint_s=54e10fce8fd691475b21c38e9e963f38; buvid_fp_plain=3EF86415-F68C-4228-A9E7-93EAF287280B167641infoc; buvid4=5141C38D-B045-E78D-8CF7-6C52FD011A2B49379-022012016-QMGIJd+6/0z8dnJOZkDqfQ%3D%3D; buvid_fp=09825c07d77edb10f9ea97b0ab608296; bsource=search_baidu; CURRENT_QUALITY=120; fingerprint=b84bd64b36a765c4d484db1da722030e; bp_video_offset_20241550=625987282920519400; bp_t_offset_20241550=625990744660001339; CURRENT_BLACKGAP=0; innersign=1; CURRENT_FNVAL=4048; b_lsid=6E6EE1E4_17EEEA9BC9A; PVID=3",
+  "csrf": "f78d1e2e89adb94cb30e644793059c4e",
+  "sleep_time": "0.3",
+  "header": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62",
+    "Accept": "application/json, text/plain, */*",
+    "DNT": "1",
+    "Origin": "https://www.bilibili.com",
+    "Referer": "https://www.bilibili.com/",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Microsoft Edge\";v=\"96\"",
+    "sec-fetch-mode": "cors",
+    "sec-ch-ua-mobile": "?0",
+    "sec-fetch-site": "same-site",
+    "sec-fetch-dest": "empty",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6"
+  },
+  "task_map": {
+    "06caf540": true,
+    "9eb307ea": true,
+    "fb833084": true,
+    "3b5b9d57": true,
+    "73a7299b": true,
+    "8e00e537": true,
+    "73b82458": true,
+    "fc80f5f0": true,
+    "233f3913": true,
+    "4b676fac": true,
+    "6c762f8b": true,
+    "8ab26d37": true,
+    "edde6660": true
+  },
+  "info":{
+	"06caf540": "360",
+    "9eb307ea": "660",
+    "fb833084": "1000(10)",
+    "3b5b9d57": "1000(20)",
+    "73a7299b": "1000(30)",
+    "8e00e537": "1000(40)",
+    "73b82458": "相遇之缘*3",
+    "fc80f5f0": "精锻用魔矿*5（1小时）",
+    "233f3913": "精锻用魔矿*5（2小时）",
+    "4b676fac": "大英雄的经验*2（电池任务）",
+    "6c762f8b": "冒险家的经验*6（弹幕任务）",
+    "8ab26d37": "摩拉*11111（送礼任务）",
+    "edde6660": "摩拉*11111（观看任务）"
+  }
+}
