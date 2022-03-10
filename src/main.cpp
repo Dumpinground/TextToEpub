@@ -9,7 +9,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
 
-    Book book;
+    testBook book;
     ifstream i;
 
     switch (argc) {
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         case 5:
             if (string(argv[1]) == "pack") {
                 // argv: 2: resourceDir 3: book_name 4: outputDir
-                book = Book::getJson(string(argv[3]) + ".json", string(argv[2]) + "data/").get<Book>();
+                book = testBook::getJson(string(argv[3]) + ".json", string(argv[2]) + "data/").get<testBook>();
                 book.CreateBuildDir(argv[4]);
                 book.extract(book.TextRoot() + string(argv[3]) + ".txt", book.dir_path() + "EPUB/");
                 book.PackBook();
@@ -38,10 +38,10 @@ int main(int argc, char **argv) {
         case 7:
             if (string(argv[1]) == "add") {
                 if (string(argv[4]) == "--image") {
-                    book = Book::getJson(string(argv[3]) + ".json", string(argv[2]) + "data/").get<Book>();
+                    book = testBook::getJson(string(argv[3]) + ".json", string(argv[2]) + "data/").get<testBook>();
                     cout << "adding images from " << book.ImagesRoot() << endl;
                     book.addIllustrations(book.ImagesRoot(), argv[5], argv[6]);
-                    Book::saveJson(book, string(argv[3]) + ".json", string(argv[2]) + "data/");
+                    testBook::saveJson(book, string(argv[3]) + ".json", string(argv[2]) + "data/");
                     cout << "add image succeeded" << endl;
                 }
             }

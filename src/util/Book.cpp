@@ -16,7 +16,7 @@ void saveJson(const json &j, const string &name, const string& root) {
     o << setw(2) << j << endl;
 }
 
-void Book::saveJson(const json &j, const string &name, const string &root) {
+void testBook::saveJson(const json &j, const string &name, const string &root) {
     ofstream o(root + name);
     o << setw(2) << j << endl;
 }
@@ -28,22 +28,22 @@ json getJson(const string &name, const string& root) {
     return j;
 }
 
-json Book::getJson(const string &name, const string &root) {
+json testBook::getJson(const string &name, const string &root) {
     json j;
     ifstream i(root + name);
     i >> j;
     return j;
 }
 
-void Book::Create(const string &dir) {
+void testBook::Create(const string &dir) {
     ifstream i("../template/template.json");
     ofstream o(dir + "/newBook.json");
     o << i.rdbuf();
 }
 
-Book::Book() = default;
+testBook::testBook() = default;
 
-std::ostream &operator<<(std::ostream &out, Book &book) {
+std::ostream &operator<<(std::ostream &out, testBook &book) {
     out << setw(4) << json(book) << endl;
     return out;
 }
@@ -64,11 +64,11 @@ bool find(const string& target, const string& text) {
     return regex_match(text, expression);
 }
 
-string Book::eBookName() const {
+string testBook::eBookName() const {
     return "[" + contributor.author + "]." + metadata.title + " " + metadata.subtitle + "." + metadata.volume;
 }
 
-string Book::fullTitle() const {
+string testBook::fullTitle() const {
     return metadata.title + " " + metadata.subtitle + " " + metadata.volume;
 }
 
@@ -81,11 +81,11 @@ void copyFiles(const string &src_path, const string &dist_path) {
     }
 }
 
-void Book::BuildInit(const string &path) {
+void testBook::BuildInit(const string &path) {
     CreateResourceDir(path);
 }
 
-void Book::CreateResourceDir(const string &path) {
+void testBook::CreateResourceDir(const string &path) {
     ResourceRoot = path + "resources/";
     boost::filesystem::create_directory(ResourceRoot);
     boost::filesystem::create_directory(ImagesRoot());
@@ -94,11 +94,11 @@ void Book::CreateResourceDir(const string &path) {
     saveJson(*this, "new book.json", DataRoot());
 }
 
-string Book::dir_path() {
+string testBook::dir_path() {
     return book_dir + dir_name + "/";
 }
 
-void Book::CreateBuildDir(const string &path) {
+void testBook::CreateBuildDir(const string &path) {
 
     book_dir = path;
     pugi::xml_document doc;
@@ -135,7 +135,7 @@ void Book::CreateBuildDir(const string &path) {
     });
 }
 
-void Book::PackBook() {
+void testBook::PackBook() {
     if (!book_dir.empty()) {
         wstring new_dir = WS(book_dir + eBookName());
         if (boost::filesystem::exists(new_dir)) {
@@ -145,7 +145,7 @@ void Book::PackBook() {
     }
 }
 
-string Book::wrap(string wrapped, bool blank) const {
+string testBook::wrap(string wrapped, bool blank) const {
     boost::replace_last(wrapped, ".", "\\.");
     wrapped = "^(" + wrapped + ")$";
     if (blank)
@@ -157,7 +157,7 @@ struct StatusProcess {
     function<void()> begin, process;
 };
 
-void Book::extract(const string &inputTextPath, const string &outPutDir) {
+void testBook::extract(const string &inputTextPath, const string &outPutDir) {
     ifstream text(inputTextPath);
     if (!text.is_open()) {
         cout << "no file found in " + inputTextPath << endl;
@@ -314,7 +314,7 @@ void Book::extract(const string &inputTextPath, const string &outPutDir) {
     buildPackage(outPutDir);
 }
 
-void Book::buildPackage(const string &outPutDir) {
+void testBook::buildPackage(const string &outPutDir) {
 
     pugi::xml_document doc;
     doc.load_file((TemplateRoot + "package.opf").data());
@@ -369,7 +369,7 @@ void Book::buildPackage(const string &outPutDir) {
     doc.save_file((outPutDir + "package.opf").data());
 }
 
-void Book::buildToc(const string &outPutDir) {
+void testBook::buildToc(const string &outPutDir) {
     string name = "toc.xhtml";
 
     pugi::xml_document toc;
@@ -409,7 +409,7 @@ void Book::buildToc(const string &outPutDir) {
 
 }
 
-void Book::addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin) {
+void testBook::addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin) {
     std::filesystem::directory_entry entry(path);
     map<string, vector<string> *> illustration;
     map<string, string> beginTag;
@@ -447,14 +447,14 @@ void Book::addIllustrations(const std::filesystem::path& path, string colorBegin
     }
 }
 
-string Book::ImagesRoot() {
+string testBook::ImagesRoot() {
     return ResourceRoot + "images/";
 }
 
-string Book::TextRoot() {
+string testBook::TextRoot() {
     return ResourceRoot + "text/";
 }
 
-string Book::DataRoot() {
+string testBook::DataRoot() {
     return ResourceRoot + "data/";
 }

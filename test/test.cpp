@@ -82,7 +82,7 @@ TEST(test, testGetJson) {
 }
 
 TEST(test, testNewBook) {
-    Book::Create(OutPutRoot);
+    testBook::Create(OutPutRoot);
 }
 
 TEST(StructToJson, testIllustration) {
@@ -106,7 +106,7 @@ TEST(StructToJson, testMetadata) {
 }
 
 TEST(StructToJson, testBook) {
-    Book book;
+    testBook book;
     saveJson(book, "book.json");
 }
 
@@ -136,7 +136,7 @@ TEST(JsonToStrut, testMetadata) {
 
 TEST(JsonToStrut, testBook) {
     json j = getJson("missing 2.json");
-    Book book = j.get<Book>();
+    testBook book = j.get<testBook>();
     cout << book << endl;
 }
 
@@ -154,7 +154,7 @@ TEST(test, testCodeCvt) {
 }
 
 TEST(test, testCreateBuild) {
-    Book book = getJson("missing 2.json").get<Book>();
+    testBook book = getJson("missing 2.json").get<testBook>();
     book.CreateBuildDir(OutPutRoot);
 //    book.PackBuild();
 }
@@ -194,7 +194,7 @@ TEST(test, testCode) {
 
 TEST(testChapter, testFindSection) {
     string txt_path = MissingRoot + "text/missing 2.txt";
-    Book book = getJson("missing 2.json");
+    testBook book = getJson("missing 2.json");
 
     string exp;
     ifstream i(OriginRoot + "Reg.txt");

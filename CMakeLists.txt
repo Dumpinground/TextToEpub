@@ -8,5 +8,6 @@ include(FetchContent)
 
 add_subdirectory(boost-cmake)
 add_subdirectory(thirdparty)
+add_subdirectory(argument)
 add_subdirectory(src)
 add_subdirectory(test)

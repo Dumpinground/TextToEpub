@@ -10,6 +10,7 @@ set(EX_LIB_LIST
         pugixml::static
         Boost::boost Boost::filesystem
         ${CMAKE_PROJECT_NAME}_third_party_lib
+        ${CMAKE_PROJECT_NAME}_argument_lib
         )
 
 target_link_libraries(${BINARY} PRIVATE

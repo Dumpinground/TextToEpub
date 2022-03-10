@@ -2,5 +2,4 @@ set(BINARY ${CMAKE_PROJECT_NAME}_third_party)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.c *.cpp)
 
-#add_executable(${BINARY} ${SOURCES})
 add_library(${BINARY}_lib STATIC ${SOURCES})
