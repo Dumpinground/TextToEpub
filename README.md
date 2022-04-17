@@ -1,4 +1,5 @@
 # TextToEpub
-build ePub from txt
+build EPub from txt
+Only support Epub3.0 so far 
 
-in progress...
+## Usage
