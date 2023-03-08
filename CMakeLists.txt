@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 include(FetchContent)
 
-add_subdirectory(boost-cmake)
+#add_subdirectory(boost-cmake)
 add_subdirectory(thirdparty)
 add_subdirectory(argument)
 add_subdirectory(src)

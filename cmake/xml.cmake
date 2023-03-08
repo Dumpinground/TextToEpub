@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
         xml
         GIT_REPOSITORY https://github.com/zeux/pugixml
-        GIT_TAG v1.11.4
+        GIT_TAG v1.13
 )
 
 FetchContent_GetProperties(xml)

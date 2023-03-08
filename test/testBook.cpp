@@ -5,12 +5,12 @@
 #include "test.h"
 
 TEST(testBook, testNewBook) {
-    testBook book;
+    Book book;
     saveJson(book, "new book.json");
 }
 
 TEST(testBook, testExtractChapter) {
-    testBook book = getJson("missing 2.json").get<testBook>();
+    Book book = getJson("missing 2.json").get<Book>();
     book.extract(book.TextRoot() + "missing 2.txt", OutPutRoot + "text/");
     book.buildPackage(OutPutRoot + "text/");
 }
@@ -20,19 +20,19 @@ TEST(testBook, testUuid) {
 }
 
 TEST(testBook, testBuildInit) {
-    testBook book;
+    Book book;
     book.BuildInit(OutPutRoot);
 }
 
 TEST(testBook, testBuildPack) {
-    testBook book = getJson("missing 2.json", "../test/result/resources/data/").get<testBook>();
+    Book book = getJson("missing 2.json", "../test/result/resources/data/").get<Book>();
     book.CreateBuildDir(OutPutRoot);
     book.extract(book.TextRoot() + "missing 2.txt", book.dir_path() + "EPUB/");
     book.PackBook();
 }
 
 TEST(testBook, testRoot) {
-    testBook book;
+    Book book;
     book.BuildInit(OutPutRoot + "playground/");
 
     auto print = [] (const vector<string>& roots) {
@@ -51,7 +51,7 @@ TEST(testBook, testRoot) {
 
 TEST(testBook, testImageAdd) {
 
-    testBook book = getJson("new book.json", OutPutRoot + "playground/resources/data/");
+    Book book = getJson("new book.json", OutPutRoot + "playground/resources/data/");
 
     book.addIllustrations(MissingRoot + "3/images", "miss3_001.png", "miss3_024025.png");
 

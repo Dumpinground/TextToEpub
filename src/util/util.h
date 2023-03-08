@@ -10,11 +10,12 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <fstream>
 #include <queue>
 #include <pugixml.hpp>
 #include <regex>
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
+//#include <boost/algorithm/string.hpp>
+//#include <boost/format.hpp>
 
 #include "../util/uuid.h"
 
@@ -36,5 +37,7 @@ struct ImageFileText {
 };
 
 string mediaType(const string& file);
+
+string join(std::vector<string> &s_vector, const string& separator);
 
 #endif //TEXTTOEPUB_UTIL_H

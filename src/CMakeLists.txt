@@ -8,7 +8,7 @@ add_library(${BINARY}_lib STATIC ${SOURCES})
 set(EX_LIB_LIST
         nlohmann_json::nlohmann_json
         pugixml::static
-        Boost::boost Boost::filesystem
+#        Boost::boost Boost::filesystem
         ${CMAKE_PROJECT_NAME}_third_party_lib
         ${CMAKE_PROJECT_NAME}_argument_lib
         )

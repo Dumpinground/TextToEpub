@@ -23,7 +23,7 @@ target_link_libraries(${BINARY} PRIVATE
         gtest_main
         nlohmann_json::nlohmann_json
         pugixml::static
-        Boost::boost Boost::filesystem
+#        Boost::boost Boost::filesystem
         ${CMAKE_PROJECT_NAME}_run_lib
         )
 

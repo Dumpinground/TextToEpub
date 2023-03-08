@@ -66,6 +66,11 @@ TEST(test, testSplit) {
     }
 }
 
+TEST(test, testJoin) {
+    std::vector<string> ss = { "1", "2", "3", "4", "5" };
+    cout << join(ss, "+") << endl;
+}
+
 TEST(test, testOpf) {
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file((AccessibleEpub3Root + "EPUB/package.opf").data());
@@ -82,7 +87,7 @@ TEST(test, testGetJson) {
 }
 
 TEST(test, testNewBook) {
-    testBook::Create(OutPutRoot);
+    Book::Create(OutPutRoot);
 }
 
 TEST(StructToJson, testIllustration) {
@@ -106,7 +111,7 @@ TEST(StructToJson, testMetadata) {
 }
 
 TEST(StructToJson, testBook) {
-    testBook book;
+    Book book;
     saveJson(book, "book.json");
 }
 
@@ -136,7 +141,7 @@ TEST(JsonToStrut, testMetadata) {
 
 TEST(JsonToStrut, testBook) {
     json j = getJson("missing 2.json");
-    testBook book = j.get<testBook>();
+    Book book = j.get<Book>();
     cout << book << endl;
 }
 
@@ -150,11 +155,11 @@ TEST(test, testCodeCvt) {
     std::wstring wstr;
     wstr = cvt_utf.from_bytes(str);
     str = cvt_utf.to_bytes(wstr);
-    boost::filesystem::create_directory(wstr);
+    filesystem::create_directory(wstr);
 }
 
 TEST(test, testCreateBuild) {
-    testBook book = getJson("missing 2.json").get<testBook>();
+    Book book = getJson("missing 2.json").get<Book>();
     book.CreateBuildDir(OutPutRoot);
 //    book.PackBuild();
 }
@@ -194,7 +199,7 @@ TEST(test, testCode) {
 
 TEST(testChapter, testFindSection) {
     string txt_path = MissingRoot + "text/missing 2.txt";
-    testBook book = getJson("missing 2.json");
+    Book book = getJson("missing 2.json");
 
     string exp;
     ifstream i(OriginRoot + "Reg.txt");

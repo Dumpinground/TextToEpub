@@ -11,7 +11,7 @@
 
 json newJson();
 
-class testBook {
+class Book {
 
 private:
     string book_dir;
@@ -27,9 +27,9 @@ public:
     outline::Illustrations illustrations;
     string ResourceRoot = "../resources/";
 
-    testBook();
+    Book();
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(testBook, metadata, contributor, contents, illustrations, ResourceRoot)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Book, metadata, contributor, contents, illustrations, ResourceRoot)
 
     string lang = "zh-CN";
     string eBookName() const;
@@ -50,7 +50,7 @@ public:
     void buildToc(const string &outPutDir);
     void addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin);
 
-    friend std::ostream &operator<<(std::ostream &out, testBook &book);
+    friend std::ostream &operator<<(std::ostream &out, Book &book);
 
     static void saveJson(const json &j, const string &name, const string& root);
     static json getJson(const string &name, const string& root);

@@ -5,9 +5,10 @@
 #include "Book.h"
 
 #include <iomanip>
-#include <boost/filesystem.hpp>
+//#include <boost/filesystem.hpp>
 #include <codecvt>
 #include <utility>
+#include <filesystem>
 
 using namespace std;
 
@@ -16,7 +17,7 @@ void saveJson(const json &j, const string &name, const string& root) {
     o << setw(2) << j << endl;
 }
 
-void testBook::saveJson(const json &j, const string &name, const string &root) {
+void Book::saveJson(const json &j, const string &name, const string &root) {
     ofstream o(root + name);
     o << setw(2) << j << endl;
 }
@@ -28,22 +29,22 @@ json getJson(const string &name, const string& root) {
     return j;
 }
 
-json testBook::getJson(const string &name, const string &root) {
+json Book::getJson(const string &name, const string &root) {
     json j;
     ifstream i(root + name);
     i >> j;
     return j;
 }
 
-void testBook::Create(const string &dir) {
+void Book::Create(const string &dir) {
     ifstream i("../template/template.json");
     ofstream o(dir + "/newBook.json");
     o << i.rdbuf();
 }
 
-testBook::testBook() = default;
+Book::Book() = default;
 
-std::ostream &operator<<(std::ostream &out, testBook &book) {
+std::ostream &operator<<(std::ostream &out, Book &book) {
     out << setw(4) << json(book) << endl;
     return out;
 }
@@ -55,7 +56,7 @@ std::wstring WS(const string &s)  {
 }
 
 void mkDir(const string &path, const function<void(const string &path)> &visit) {
-    boost::filesystem::create_directory(WS(path));
+    filesystem::create_directory(WS(path));
     visit(path);
 }
 
@@ -64,47 +65,47 @@ bool find(const string& target, const string& text) {
     return regex_match(text, expression);
 }
 
-string testBook::eBookName() const {
+string Book::eBookName() const {
     return "[" + contributor.author + "]." + metadata.title + " " + metadata.subtitle + "." + metadata.volume;
 }
 
-string testBook::fullTitle() const {
+string Book::fullTitle() const {
     return metadata.title + " " + metadata.subtitle + " " + metadata.volume;
 }
 
 //copy all files in the src_path
 void copyFiles(const string &src_path, const string &dist_path) {
-    boost::filesystem::path path(src_path);
-    boost::filesystem::directory_iterator dir_end;
-    for (boost::filesystem::directory_iterator dir_it(path); dir_it != dir_end; ++dir_it) {
-        boost::filesystem::copy(dir_it->path(), WS(dist_path + dir_it->path().filename().string()) );
+    filesystem::path path(src_path);
+    filesystem::directory_iterator dir_end;
+    for (filesystem::directory_iterator dir_it(path); dir_it != dir_end; ++dir_it) {
+        filesystem::copy(dir_it->path(), WS(dist_path + dir_it->path().filename().string()) );
     }
 }
 
-void testBook::BuildInit(const string &path) {
+void Book::BuildInit(const string &path) {
     CreateResourceDir(path);
 }
 
-void testBook::CreateResourceDir(const string &path) {
+void Book::CreateResourceDir(const string &path) {
     ResourceRoot = path + "resources/";
-    boost::filesystem::create_directory(ResourceRoot);
-    boost::filesystem::create_directory(ImagesRoot());
-    boost::filesystem::create_directory(TextRoot());
-    boost::filesystem::create_directory(DataRoot());
+    filesystem::create_directory(ResourceRoot);
+    filesystem::create_directory(ImagesRoot());
+    filesystem::create_directory(TextRoot());
+    filesystem::create_directory(DataRoot());
     saveJson(*this, "new book.json", DataRoot());
 }
 
-string testBook::dir_path() {
+string Book::dir_path() {
     return book_dir + dir_name + "/";
 }
 
-void testBook::CreateBuildDir(const string &path) {
+void Book::CreateBuildDir(const string &path) {
 
     book_dir = path;
     pugi::xml_document doc;
 
-    if (boost::filesystem::exists(dir_path())) {
-        boost::filesystem::remove_all(dir_path());
+    if (filesystem::exists(dir_path())) {
+        filesystem::remove_all(dir_path());
     }
 
     mkDir(dir_path(), [this](const string &path) {
@@ -126,7 +127,7 @@ void testBook::CreateBuildDir(const string &path) {
             doc.save_file((path + "package.opf").data());
 
             mkDir(path + "Styles/",[](const string &path) {
-                boost::filesystem::copy_file(TemplateRoot + "Styles/style.css", path + "style.css");
+                filesystem::copy_file(TemplateRoot + "Styles/style.css", path + "style.css");
             });
             mkDir(path + "Images/", [this](const string &path) {
                 copyFiles(ImagesRoot(), path);
@@ -135,18 +136,19 @@ void testBook::CreateBuildDir(const string &path) {
     });
 }
 
-void testBook::PackBook() {
+void Book::PackBook() {
     if (!book_dir.empty()) {
         wstring new_dir = WS(book_dir + eBookName());
-        if (boost::filesystem::exists(new_dir)) {
-            boost::filesystem::remove_all(new_dir);
+        if (filesystem::exists(new_dir)) {
+            filesystem::remove_all(new_dir);
         }
-        boost::filesystem::rename(book_dir + dir_name, new_dir);
+        filesystem::rename(book_dir + dir_name, new_dir);
     }
 }
 
-string testBook::wrap(string wrapped, bool blank) const {
-    boost::replace_last(wrapped, ".", "\\.");
+string Book::wrap(string wrapped, bool blank) const {
+//    boost::replace_last(wrapped, ".", "\\.");
+    wrapped.replace(wrapped.find_last_of('.'), 1, "\\.");
     wrapped = "^(" + wrapped + ")$";
     if (blank)
         wrapped.insert(1, "[" + whitespace + "]*");
@@ -157,15 +159,16 @@ struct StatusProcess {
     function<void()> begin, process;
 };
 
-void testBook::extract(const string &inputTextPath, const string &outPutDir) {
+void Book::extract(const string &inputTextPath, const string &outPutDir) {
     ifstream text(inputTextPath);
+
     if (!text.is_open()) {
         cout << "no file found in " + inputTextPath << endl;
         return;
     }
 
     string line;
-    whitespace = boost::join(metadata.whitespace, "") + "\\s";
+    whitespace = join(metadata.whitespace, "") + "\\s";
 
     vector<string> list;
     if (!contents.preface.empty()) list.push_back(contents.preface);
@@ -180,7 +183,7 @@ void testBook::extract(const string &inputTextPath, const string &outPutDir) {
 
     queue<string> status_queue;
 
-    expression["separator"] = new regex(wrap(boost::join(metadata.separators, "|"), true));
+    expression["separator"] = new regex(wrap(join(metadata.separators, "|"), true));
     expression["space"] = new regex("^[" + whitespace + "]*");
 
     auto setStatus = [&status_queue] (string &status) {
@@ -314,7 +317,7 @@ void testBook::extract(const string &inputTextPath, const string &outPutDir) {
     buildPackage(outPutDir);
 }
 
-void testBook::buildPackage(const string &outPutDir) {
+void Book::buildPackage(const string &outPutDir) {
 
     pugi::xml_document doc;
     doc.load_file((TemplateRoot + "package.opf").data());
@@ -369,7 +372,7 @@ void testBook::buildPackage(const string &outPutDir) {
     doc.save_file((outPutDir + "package.opf").data());
 }
 
-void testBook::buildToc(const string &outPutDir) {
+void Book::buildToc(const string &outPutDir) {
     string name = "toc.xhtml";
 
     pugi::xml_document toc;
@@ -409,7 +412,7 @@ void testBook::buildToc(const string &outPutDir) {
 
 }
 
-void testBook::addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin) {
+void Book::addIllustrations(const std::filesystem::path& path, string colorBegin, string grayBegin) {
     std::filesystem::directory_entry entry(path);
     map<string, vector<string> *> illustration;
     map<string, string> beginTag;
@@ -447,14 +450,14 @@ void testBook::addIllustrations(const std::filesystem::path& path, string colorB
     }
 }
 
-string testBook::ImagesRoot() {
+string Book::ImagesRoot() {
     return ResourceRoot + "images/";
 }
 
-string testBook::TextRoot() {
+string Book::TextRoot() {
     return ResourceRoot + "text/";
 }
 
-string testBook::DataRoot() {
+string Book::DataRoot() {
     return ResourceRoot + "data/";
 }

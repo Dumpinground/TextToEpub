@@ -33,6 +33,18 @@ string mediaType(const string& file) {
     return media;
 }
 
+string join(std::vector<string> &s_vector, const string& separator) {
+
+    if (s_vector.empty()) return "";
+
+    string result = s_vector[0];
+    for (int i = 1; i < s_vector.size(); ++i) {
+        result += separator + s_vector[i];
+    }
+
+    return result;
+}
+
 bool ImageFileText::init() {
     auto pos = file.find_last_of('.');
     if (pos == string::npos) {
