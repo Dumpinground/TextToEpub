@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(TextToEpub)
 
+cmake_policy(SET CMP0135 NEW)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
